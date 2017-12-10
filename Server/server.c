@@ -1,5 +1,15 @@
 /* 
  * Server
+ * Cac chuc nang: 
+ 	1. Cho phep nguoi dung noi chuyen truc tiep
+	2. Cho phep nguoi dung noi chuyen theo nhom
+	3. Cho phep nguoi dung gui file cho nhau
+	4. Cho phep nguoi dung gui file theo nhom
+	
+* Cac thanh vien:
+	1. Nguyen Thi Huyen Trang
+	2. Le Quynh Trang
+	3. Hoang Van Thanh
 */
 
 #include <stdio.h>
