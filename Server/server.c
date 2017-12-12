@@ -20,7 +20,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <errno.h>
 #include <pthread.h>
+
+#define MAXUSER 100;
+#define MAXTOPIC 5;
+#define PORT 4000;
 
 struct User
 {
@@ -31,8 +36,7 @@ struct User
 	//int typeUser; //subcriber (1) or user (0) = chat with user or group
 };
 
-#define MAXUSER 100;
-#define MAXTOPIC 5;
+
 struct User user[MAXUSER];
 int topic[MAXTOPIC] = {1, 2, 3, 4, 5};
 
@@ -116,7 +120,7 @@ int main (int argc, char **argv){
 	bzero (&servaddr, sizeof (servaddr));
 	servaddr.sin_family  	 = AF_INET;
 	servaddr.sin_addr.s_addr = htonl (INADDR_ANY);
-	servaddr.sin_port 		 = htonl (4000);
+	servaddr.sin_port 		 = htonl (PORT);
 	bind (listenfd, (struct sockaddr *) &servaddr, sizeof (servaddr));
 	
 	listen (listenfd, MAXUSER);
