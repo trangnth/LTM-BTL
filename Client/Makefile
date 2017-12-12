@@ -17,7 +17,7 @@ TARGET = client
 
 $(TARGET) : $(OBJ)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ)
-        
+	
 #$(OBJ): $(INCL)
 
 clean:
