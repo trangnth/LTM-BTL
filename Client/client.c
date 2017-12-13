@@ -32,7 +32,7 @@ int main(int argc, char **argv){
 	char username[50] = {0};
 
 
-	if (sockfd = socket (AF_INET, SOCK_STREAM, 0) == -1){
+	if ((sockfd = socket (AF_INET, SOCK_STREAM, 0)) == -1){
 		exit (EXIT_FAILURE);
 	}
 	bzero (&servaddr, sizeof(servaddr));
@@ -41,7 +41,7 @@ int main(int argc, char **argv){
 
     inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
 
-    if ((connect(sockfd, (struct sockfd *) &servaddr)) == -1){
+    if ((connect(sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == -1){
     	exit(EXIT_FAILURE);
     }
 
@@ -49,8 +49,8 @@ int main(int argc, char **argv){
     printf ("Enter your name: ");
     fgets (username, 50, stdin);
     username[strcspn (username, "\n")] = 0;
-    write (socfd, username, sizeof (username));
-    read (socfd, &uid, sizeof (int));
+    write (sockfd, username, sizeof (username));
+    read (sockfd, &uid, sizeof (int));
 
     printf ("\nList user online: ");
     for (i = 0; i <= uid; i++){

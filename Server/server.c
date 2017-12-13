@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sys/stat.h>
+
 #define MAXUSER 100
 #define MAXTOPIC 5
 #define PORT 4000
@@ -48,7 +49,7 @@ static void *doit (void *arg){
 	int sockfd, uid;
 
 	sockfd = *((int *) arg);
-	pthread_detach (pthread_seft ());
+	pthread_detach (pthread_self ());
 
 	pthread_mutex_lock (&curUser_mutex);
 		uid = curUser;
