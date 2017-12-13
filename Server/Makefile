@@ -16,7 +16,7 @@ OBJ = $(SRC:.c=.o)
 TARGET = server
 
 $(TARGET) : $(OBJ)
-	$(CC) -pthread $(CFLAGS) -o $(TARGET) $(OBJ)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ) -pthread
         
 #$(OBJ): $(INCL)
 

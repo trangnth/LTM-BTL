@@ -1,6 +1,6 @@
-/* 
+/*
  * Client
- * Cac chuc nang: 
+ * Cac chuc nang:
  	1. Cho phep nguoi dung noi chuyen truc tiep
 	2. Cho phep nguoi dung noi chuyen theo nhom
 	3. Cho phep nguoi dung gui file cho nhau
@@ -30,7 +30,7 @@ int main(int argc, char **argv){
 	int sockfd, i, uid;
 	struct sockaddr_in servaddr;
 	char username[50] = {0};
-	
+
 
 	if (sockfd = socket (AF_INET, SOCK_STREAM, 0) == -1){
 		exit (EXIT_FAILURE);
