@@ -108,7 +108,7 @@ static void *doit (void *arg){
 
 }
 
-void sendFile (connfd) {
+void sendFile (int connfd) {
 	int file_size;
 	char file_name[256];
 	int remain_data;
@@ -153,7 +153,7 @@ void sendFile (connfd) {
  }
 }
 
-void receiveFile (sockfd) {
+void receiveFile (int sockfd) {
 	char buffer[1024];
 	char file_name[256];
 	int file_size;
