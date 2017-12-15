@@ -27,7 +27,7 @@
 #define PORT 4000
 
 int main(int argc, char **argv){
-	int sockfd, i, uid;
+	int sockfd, i, j, uid, topic;
 	struct sockaddr_in servaddr;
 	char username[50] = {0};
 
@@ -45,19 +45,47 @@ int main(int argc, char **argv){
     	exit(EXIT_FAILURE);
     }
 
+    //recv list topic
+    printf ("\nList user online: ");
+    for (i = 0; i < MAXTOPIC; i++){
+        char userTopic[500] = {0};
+        read (sockfd, userTopic, sizeof(int));
+        printf ("\n%d. %s", i, userTopic);
+    }
+
+    printf("\nChose topic that you want to subcribe: ");
+    scanf ("%d", &topic);
+    write (sockfd, &topic, sizeof(int));
+
     fflush (stdin);
     printf ("Enter your name: ");
     fgets (username, 50, stdin);
     username[strcspn (username, "\n")] = 0;
     write (sockfd, username, sizeof (username));
-    read (sockfd, &uid, sizeof (int));
+    printf ("\nWelcome to group! (Enter your message)");
+    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.")
 
-    printf ("\nList user online: ");
-    for (i = 0; i <= uid; i++){
-    	char userOnline[50] = {0};
-    	read (sockfd, userOnline, sizeof (userOnline));
-    	printf ("\n%d. %s", i + 1, userOnline);
+    //Start chat
+    
+    while(){
+        char msg[1024] = {0} sendmsg[1024] = {0}, recvmsg[1024] = {0};
+        fflush (stdin);
+        fgets (msg, 1024, stdin);
+        if (strcmp (msg[0], '!') != 0){
+            strcat (sendmsg, topic);
+            strcat (sendmsg, ". ");
+            strcat (sendmsg, username);
+            strcat (sendmsg, ": ");
+            strcat (sendmsg, msg);
+        }
+        if (strcmp (msg, "@") == 0){
+            write (sockfd, msg, sizeof (msg));
+            break;
+        }
+        write (sockfd, sendmsg, sizeof (sendmsg));
     }
 
+    printf ("\nFinish chat.\n");
+    close (sockfd);
 	return 0;
 }
