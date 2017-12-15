@@ -6,7 +6,15 @@
 	3. Cho phep nguoi dung gui file cho nhau
 	4. Cho phep nguoi dung gui file theo nhom
 
-* Cac thanh vien:
+ * Mo ta phan chat nhom va chat rieng: 
+ 	-> clinet login: nhap username va chon topic minh muon 
+ 	-> thong bao cho server biet
+ 	-> server luu thong tin cho tung user
+ 	-> user chon muon chat rieng hay nhom, neu rieng thi chon user muon chat
+ 	-> user nhap mess, nhan '@' de chuyen che do chat hoac ket thuc chat 
+ 	-> server la nguoi trung gian, nhan va chuyen mess toi dung nguoi nhan
+
+ * Cac thanh vien:
 	1. Nguyen Thi Huyen Trang
 	2. Le Quynh Trang
 	3. Hoang Van Thanh
@@ -24,28 +32,32 @@
 #include <pthread.h>
 #include <sys/stat.h>
 
-#define MAXUSER 100
+#define MAXUSER 10
 #define MAXTOPIC 5
 #define PORT 4000
 
 struct User
 {
 	char username[50];
-	int uid;
+	//int uid;
 	int topic;
-	int sockfd;
+	//int sockfd;
 	//int typeUser; //subcriber (1) or user (0) = chat with user or group
 };
 
+struct Topic
+{
+	struct User user[MAXUSER];
+	int n_user;
+};
 
-struct User user[MAXUSER];
-int topic[MAXTOPIC] = {1, 2, 3, 4, 5};
+struct Topic topic[MAXTOPIC];
 
 pthread_mutex_t curUser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int curUser = 0; //current user
 
-static void *doit (void *arg){
+static void *chat (void *arg){
 	int sockfd, uid;
 
 	sockfd = *((int *) arg);
@@ -55,23 +67,29 @@ static void *doit (void *arg){
 		uid = curUser;
 		curUser ++;
 		printf ("\n%d user online", curUser);
-	pthread_mutex_unlock (&curUser_mutex);
+	
 
 	//recv username client
-	read (sockfd, user [uid].username, sizeof (user[uid].username));
+	read (sockfd, topic.user [uid].username, sizeof (topic.user[uid].username));
 	write (sockfd, &uid, sizeof (int)); //send current user online
-	user[uid].uid = uid;
-	user[uid].sockfd = sockfd;
+	//topic.user[uid].uid = uid;
+	topic.user[uid].sockfd = sockfd;
 
- //        user[uid].userFlag = 1;
- 	printf ("\nname: %s, sockfd: %d", user[uid].username, user[uid].sockfd);
-	//send list user online
-	int i;
-	for (i = 0; i <= uid; i++){
-		write (sockfd, user[i].username, sizeof(user[i].username));
- //                sleep(1);
+ 	printf ("\nname: %s, sockfd: %d", topic.user[uid].username, topic.user[uid].sockfd);
+	
+	int i, j;
+	//send list topic
+
+	for (i = 0; i < MAXTOPIC; i++){
+		char userTopic[500] = {0};
+		for (j = 0; j < topic[i].n_user; j++){
+			strcat (userTopic, topic[i].user.username);
+			strcat (userTopic, " ");
+		}
+		write (sockfd, userTopic, sizeof (userTopic));
+		
 	}
-
+	pthread_mutex_unlock (&curUser_mutex);
 	//for(;;){
  //                printf("\n%s: ", user[uid].name);
  //                char mess[1000] = {0};
@@ -199,10 +217,13 @@ void receiveFile (int sockfd) {
 int main (int argc, char **argv){
 	int listenfd;
 	socklen_t clilen;
-	int *iptr;
+	int *iptr, i;
 	pthread_t tid;
 //	pid_t childpid;
 	struct sockaddr_in cliaddr, servaddr;
+
+	for (i = 0; i < MAXTOPIC; i++)
+		topic[i].n_user = 0;
 
 	listenfd = socket (AF_INET, SOCK_STREAM, 0);
 
@@ -221,7 +242,7 @@ int main (int argc, char **argv){
 		char *addr;
 		addr = inet_ntoa (cliaddr.sin_addr);
 		printf ("\nOne client %s:%d connected.", addr, cliaddr.sin_port);
-		pthread_create (&tid, NULL, doit, (void*) iptr);
+		pthread_create (&tid, NULL, chat, (void*) iptr);
 	}
 
 	free (iptr);
