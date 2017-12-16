@@ -64,9 +64,6 @@ static void *chat (void *arg){
 	pthread_detach (pthread_self ());
 
 	pthread_mutex_lock (&curUser_mutex);
-		//uid = curUser;
-		//curUser ++;
-		//printf ("\n%d user online", curUser);
 		
 		int i, j;
 		//send list topic
@@ -96,36 +93,40 @@ static void *chat (void *arg){
 
  	//recvice message
  	while(1){
-	 	char recvmsg[1024] = {0}, msg[1024] = {0};
+	 	char recvmsg[1024] = {0}, msg[1024] = {0}, sendmsg[1024] = {0};
 	 	read (sockfd, recvmsg, sizeof(recvmsg));
 
 	 	if (strcmp(recvmsg, "@") == 0) 
 	 		break;
-	 	int *str = recvmsg;
-	 	if (strcmp (str[0], '!') == 0){
+	 	
+	 	char buff[1024], *str;
+
+	 	if (strcmp (str[0], "!") == 0){
+	 		strcmy (buff, recvmsg);
+	 		str = buff;
 	 		str ++;
-	 		
+	 		strtok (str, ":"); //lay user => str
+	 		msg = strstr(name, ":");//lay mess tu ':' tro di
+	 		strcat(sendmsg, topic[uTopic].user[uid].username);
+	 		strcat(sendmsg, msg);
+
+	 		pthread_mutex_lock(&curUser_mutex);
+	 		for (i = 0; i < MAXTOPIC; i++)
+	 			for (j = 0; j < topic[i].curUser; j++)
+	 				if (strcmp(topic[i].user[j].username, str) == 0)
+	 					write (topic[i].user[j].sockfd, sendmsg, sizeof(sendmsg));
+	 		pthread_mutex_unlock(&curUser_mutex);
+
+	 	}else{
+	 		pthread_mutex_lock(&curUser_mutex);
+	 		for (i = 0; i < topic[uTopic].curUser; i++)
+	 			if (i == uid) continue;
+	 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
+	 		pthread_mutex_unlock(&curUser_mutex);
 	 	}
+
 	}
 
-	//for(;;){
- //                printf("\n%s: ", user[uid].name);
- //                char mess[1000] = {0};
-
- //                read(connfd, mess, 1000);
- //                if (strcmp(mess, "@") == 0)
- //                        break;
- //                printf (" %s", mess);
- //                char buff[1052] = {0};
- //                strcat (buff, user[uid].name);
- //                strcat (buff, ": ");
- //                strcat (buff, mess);
- //                strcat (buff, " ");
- //                for(i = 0; i < n_user; i++){
- //                        if (i == uid) continue;
- //                        write(user[i].sockfd, buff, strlen(buff)); //strlen thay cho sizeof
- //                }
- //        }
  	printf("\n%s  finish chat.\n", topic[uTopic].user[uid].name);
     pthread_mutex_lock(&curUser_mutex);
         for (i = uid; i < topic[uTopic].curUser - 1; i++){
@@ -137,8 +138,7 @@ static void *chat (void *arg){
         topic[uTopic].curUser --;
     pthread_mutex_unlock(&curUser_mutex);
 
-        free(arg);
-// //      pthread_detach(pthread_self());
+    free(arg);
 
     close (sockfd);
     return (NULL);
