@@ -33,6 +33,7 @@ int main(int argc, char **argv){
 
 
 	if ((sockfd = socket (AF_INET, SOCK_STREAM, 0)) == -1){
+        fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 	bzero (&servaddr, sizeof(servaddr));
