@@ -63,6 +63,8 @@ static void *chat (void *arg){
 	sockfd = *((int *) arg);
 	pthread_detach (pthread_self ());
 
+printf ("hello\n");
+
 	pthread_mutex_lock (&curUser_mutex);
 		
 		int i, j;
@@ -71,11 +73,14 @@ static void *chat (void *arg){
 		for (i = 0; i < MAXTOPIC; i++){
 			char userTopic[500] = {0};
 			//write (sockfd, &topic[i].n_user, sizeof(int));
-			for (j = 0; j < topic[i].curUser; j++){
-				strcat (userTopic, topic[i].user[j].username);
-				strcat (userTopic, " ");
-			}
-			write (sockfd, userTopic, sizeof (userTopic));
+			//if (topic[i].curUser > 0){
+				for (j = 0; j < topic[i].curUser; j++){
+					strcat (userTopic, topic[i].user[j].username);
+					strcat (userTopic, " ");
+				}
+sleep(1);
+				write (sockfd, userTopic, sizeof (userTopic));
+			//}
 		}
 
 		//recv topic from client
@@ -246,10 +251,10 @@ int main (int argc, char **argv){
 	bzero (&servaddr, sizeof (servaddr));
 	servaddr.sin_family  	 = AF_INET;
 	servaddr.sin_addr.s_addr = htonl (INADDR_ANY);
-	servaddr.sin_port 		 = htonl (PORT);
+	servaddr.sin_port 		 = htons (PORT);
 	bind (listenfd, (struct sockaddr *) &servaddr, sizeof (servaddr));
 
-	listen (listenfd, MAXUSER);
+	listen (listenfd, 100);
 	for (;;){
 		clilen = sizeof (cliaddr);
 		iptr = malloc (sizeof(int));
@@ -258,6 +263,7 @@ int main (int argc, char **argv){
 		char *addr;
 		addr = inet_ntoa (cliaddr.sin_addr);
 		printf ("\nOne client %s:%d connected.", addr, cliaddr.sin_port);
+//		sleep(1);
 		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}
 

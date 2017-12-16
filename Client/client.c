@@ -1,5 +1,4 @@
-/*
- * Client
+ /* Client
  * Cac chuc nang:
  	1. Cho phep nguoi dung noi chuyen truc tiep
 	2. Cho phep nguoi dung noi chuyen theo nhom
@@ -52,7 +51,7 @@ int main(int argc, char **argv){
     printf ("\nList user online: ");
     for (i = 0; i < MAXTOPIC; i++){
         char userTopic[500] = {0};
-        read (sockfd, userTopic, sizeof(int));
+        read (sockfd, userTopic, sizeof(userTopic));
         printf ("\n%d. %s", i, userTopic);
     }
 
@@ -61,12 +60,14 @@ int main(int argc, char **argv){
     write (sockfd, &topic, sizeof(int));
 
     fflush (stdin);
-    printf ("Enter your name: ");
+    printf ("\nEnter your name: ");
+sleep(1);
     fgets (username, 50, stdin);
     username[strcspn (username, "\n")] = 0;
+printf("\n%s\n", username);
     write (sockfd, username, sizeof (username));
-    printf ("\nWelcome to group! (Enter your message)");
-    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.");
+    printf ("\nWelcome to group %d! (Enter your message)", topic);
+    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.\n");
 
     //Start chat
     
@@ -74,6 +75,11 @@ int main(int argc, char **argv){
         char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
         fflush (stdin);
         fgets (msg, 1024, stdin);
+printf ("%s", msg);
+	if (strcmp (msg, "@") == 0){
+            write (sockfd, msg, sizeof (msg));
+            break;
+        }
         if (msg[0] !=  '!'){
             //strcat (sendmsg, topic);
             strcat (sendmsg, "Topic. ");
@@ -81,10 +87,10 @@ int main(int argc, char **argv){
             strcat (sendmsg, ": ");
             strcat (sendmsg, msg);
         }
-        if (strcmp (msg, "@") == 0){
-            write (sockfd, msg, sizeof (msg));
-            break;
-        }
+        //if (strcmp (msg, "@") == 0){
+          //  write (sockfd, msg, sizeof (msg));
+            //break;
+       // }
         write (sockfd, sendmsg, sizeof (sendmsg));
     }
 
