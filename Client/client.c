@@ -43,7 +43,7 @@ int main(int argc, char **argv){
 
     inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
 
-    if ((connect(sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == -1){
+    if ((connect(sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == 1){
 	fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));    
 	exit(EXIT_FAILURE);
     }

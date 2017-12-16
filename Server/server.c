@@ -258,7 +258,7 @@ int main (int argc, char **argv){
 		char *addr;
 		addr = inet_ntoa (cliaddr.sin_addr);
 		printf ("\nOne client %s:%d connected.", addr, cliaddr.sin_port);
-		pthread_create (&tid, NULL, chat, (void*) iptr);
+		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}
 
 	free (iptr);
