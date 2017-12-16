@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#define MAXTOPIC 5
 #define PORT 4000
 
 int main(int argc, char **argv){
@@ -43,7 +44,8 @@ int main(int argc, char **argv){
     inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
 
     if ((connect(sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == -1){
-    	exit(EXIT_FAILURE);
+	fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));    
+	exit(EXIT_FAILURE);
     }
 
     //recv list topic
@@ -64,17 +66,17 @@ int main(int argc, char **argv){
     username[strcspn (username, "\n")] = 0;
     write (sockfd, username, sizeof (username));
     printf ("\nWelcome to group! (Enter your message)");
-    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.")
+    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.");
 
     //Start chat
     
-    while(){
-        char msg[1024] = {0} sendmsg[1024] = {0}, recvmsg[1024] = {0};
+    while(1){
+        char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
         fflush (stdin);
         fgets (msg, 1024, stdin);
-        if (strcmp (msg[0], '!') != 0){
-            strcat (sendmsg, topic);
-            strcat (sendmsg, ". ");
+        if (msg[0] !=  '!'){
+            //strcat (sendmsg, topic);
+            strcat (sendmsg, "Topic. ");
             strcat (sendmsg, username);
             strcat (sendmsg, ": ");
             strcat (sendmsg, msg);
