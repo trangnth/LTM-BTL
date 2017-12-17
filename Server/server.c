@@ -63,26 +63,19 @@ static void *chat (void *arg){
 	sockfd = *((int *) arg);
 	pthread_detach (pthread_self ());
 
-printf ("hello\n");
-
 	pthread_mutex_lock (&curUser_mutex);
 		
 		int i, j;
 		//send list topic
-		//write (sockfd, &uid, sizeof (int)); //send current user online
 		for (i = 0; i < MAXTOPIC; i++){
 			char userTopic[500] = {0};
-			//write (sockfd, &topic[i].n_user, sizeof(int));
-			//if (topic[i].curUser > 0){
 				for (j = 0; j < topic[i].curUser; j++){
 					strcat (userTopic, topic[i].user[j].username);
 					strcat (userTopic, " ");
 				}
-//sleep(1);
 				write (sockfd, userTopic, sizeof (userTopic));
-			//}
 		}
-
+printf ("\nSend list topic done!");
 		//recv topic from client
 		int uTopic;
 		read (sockfd, &uTopic, sizeof (int));
@@ -94,7 +87,7 @@ printf ("hello\n");
 	read (sockfd, topic[uTopic].user[uid].username, sizeof (topic[uTopic].user[uid].username));
 	topic[uTopic].user[uid].sockfd = sockfd;
 
- 	printf ("\nName: %s, sockfd: %d", topic[uTopic].user[uid].username, topic[uTopic].user[uid].sockfd);
+ 	//printf ("\nName: %s, sockfd: %d", topic[uTopic].user[uid].username, topic[uTopic].user[uid].sockfd);
 
  	//recvice message
  	while(1){
@@ -254,16 +247,15 @@ int main (int argc, char **argv){
 	servaddr.sin_port 		 = htons (PORT);
 	bind (listenfd, (struct sockaddr *) &servaddr, sizeof (servaddr));
 
-	listen (listenfd, 100);
+	listen (listenfd, 10);
 	for (;;){
 		clilen = sizeof (cliaddr);
 		iptr = malloc (sizeof(int));
 		*iptr = accept (listenfd, (struct sockaddr *) &cliaddr, &clilen);
 
-		char *addr;
-		addr = inet_ntoa (cliaddr.sin_addr);
-		printf ("\nOne client %s:%d connected.", addr, cliaddr.sin_port);
-//		sleep(1);
+//		char *addr;
+//		addr = inet_ntoa (cliaddr.sin_addr);
+	fprintf (stdout,"\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
 		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}
 
