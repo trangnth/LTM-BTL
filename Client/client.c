@@ -1,5 +1,4 @@
-/*
- * Client
+ /* Client
  * Cac chuc nang:
  	1. Cho phep nguoi dung noi chuyen truc tiep
 	2. Cho phep nguoi dung noi chuyen theo nhom
@@ -24,15 +23,51 @@
 #include <errno.h>
 #include <pthread.h>
 
+#define MAXTOPIC 5
 #define PORT 4000
+
+//thread write
+static void *writemsg (void *arg){
+    int sockfd = *((int *)arg);
+    while(1){
+        char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
+        fflush (stdin);
+        fgets (msg, 1024, stdin);
+printf ("%s", msg);
+        if (strcmp (msg, "@") == 0){
+            write (sockfd, msg, sizeof (msg));
+            break;
+        }
+        if (msg[0] !=  '!'){
+            strcat (sendmsg, "Topic. ");
+            strcat (sendmsg, username);
+            strcat (sendmsg, ": ");
+            strcat (sendmsg, msg);
+        }
+
+        write (sockfd, sendmsg, sizeof (sendmsg));
+    }
+}
+
+//thread read
+static void *readmsg (void *arg){
+    int sockfd = *((int *)arg);
+    char buff [1024] = {0};
+    while (read (sockfd, buff, sizeof(buff)) > 0){
+        printf ("\n%s", buff);
+        //buff = {0};
+    }
+}
+
 
 int main(int argc, char **argv){
 	int sockfd, i, j, uid, topic;
 	struct sockaddr_in servaddr;
 	char username[50] = {0};
-
+    pthread_t w_tid, r_tid;
 
 	if ((sockfd = socket (AF_INET, SOCK_STREAM, 0)) == -1){
+        fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 	bzero (&servaddr, sizeof(servaddr));
@@ -41,15 +76,16 @@ int main(int argc, char **argv){
 
     inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
 
-    if ((connect(sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == -1){
-    	exit(EXIT_FAILURE);
+    if ((connect(sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == 1){
+	fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
+	exit(EXIT_FAILURE);
     }
 
     //recv list topic
     printf ("\nList user online: ");
     for (i = 0; i < MAXTOPIC; i++){
         char userTopic[500] = {0};
-        read (sockfd, userTopic, sizeof(int));
+        read (sockfd, userTopic, sizeof(userTopic));
         printf ("\n%d. %s", i, userTopic);
     }
 
@@ -58,32 +94,19 @@ int main(int argc, char **argv){
     write (sockfd, &topic, sizeof(int));
 
     fflush (stdin);
-    printf ("Enter your name: ");
+    printf ("\nEnter your name: ");
+//sleep(1);
     fgets (username, 50, stdin);
     username[strcspn (username, "\n")] = 0;
+printf("\n%s\n", username);
     write (sockfd, username, sizeof (username));
-    printf ("\nWelcome to group! (Enter your message)");
-    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.")
+    printf ("\nWelcome to group %d! (Enter your message)", topic);
+    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.\n");
 
     //Start chat
+    pthread_create (&w_tid, NULL, &writemsg, (void *) sockfd);
+    pthread_create (&r_tid, NULL, &readmsg, (void *) sockfd);
 
-    while(){
-        char msg[1024] = {0} sendmsg[1024] = {0}, recvmsg[1024] = {0};
-        fflush (stdin);
-        fgets (msg, 1024, stdin);
-        if (strcmp (msg[0], '!') != 0){
-            strcat (sendmsg, topic);
-            strcat (sendmsg, ". ");
-            strcat (sendmsg, username);
-            strcat (sendmsg, ": ");
-            strcat (sendmsg, msg);
-        }
-        if (strcmp (msg, "@") == 0){
-            write (sockfd, msg, sizeof (msg));
-            break;
-        }
-        write (sockfd, sendmsg, sizeof (sendmsg));
-    }
 
     printf ("\nFinish chat.\n");
     close (sockfd);

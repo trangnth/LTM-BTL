@@ -57,6 +57,97 @@ pthread_mutex_t curUser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //int curUser = 0; //current user
 
+static void *chat (void *arg){
+	int sockfd, uid;
+
+	sockfd = *((int *) arg);
+	pthread_detach (pthread_self ());
+
+printf ("hello\n");
+
+	pthread_mutex_lock (&curUser_mutex);
+
+		int i, j;
+		//send list topic
+		//write (sockfd, &uid, sizeof (int)); //send current user online
+		for (i = 0; i < MAXTOPIC; i++){
+			char userTopic[500] = {0};
+			//write (sockfd, &topic[i].n_user, sizeof(int));
+			//if (topic[i].curUser > 0){
+				for (j = 0; j < topic[i].curUser; j++){
+					strcat (userTopic, topic[i].user[j].username);
+					strcat (userTopic, " ");
+				}
+//sleep(1);
+				write (sockfd, userTopic, sizeof (userTopic));
+			//}
+		}
+
+		//recv topic from client
+		int uTopic;
+		read (sockfd, &uTopic, sizeof (int));
+		uid = topic[uTopic].curUser;
+		topic[uTopic].curUser ++;
+	pthread_mutex_unlock (&curUser_mutex);
+
+	//recv username client
+	read (sockfd, topic[uTopic].user[uid].username, sizeof (topic[uTopic].user[uid].username));
+	topic[uTopic].user[uid].sockfd = sockfd;
+
+ 	printf ("\nName: %s, sockfd: %d", topic[uTopic].user[uid].username, topic[uTopic].user[uid].sockfd);
+
+ 	//recvice message
+ 	while(1){
+	 	char recvmsg[1024] = {0}, *msg, sendmsg[1024] = {0};
+	 	read (sockfd, recvmsg, sizeof(recvmsg));
+
+	 	if (strcmp(recvmsg, "@") == 0)
+	 		break;
+
+	 	char buff[1024], *str;
+		strcpy (buff, recvmsg);
+                str = buff;
+	 	if (str [0] == '!'){
+	 		str ++;
+	 		strtok (str, ":"); //lay user => str vaf buff = '!username'
+	 		msg = strstr(recvmsg, ":");//lay mess tu ':' tro di
+	 		strcat(sendmsg, topic[uTopic].user[uid].username);
+	 		strcat(sendmsg, msg);
+
+//	 		pthread_mutex_lock(&curUser_mutex);
+	 		for (i = 0; i < MAXTOPIC; i++)
+	 			for (j = 0; j < topic[i].curUser; j++)
+	 				if (strcmp(topic[i].user[j].username, str) == 0)
+	 					write (topic[i].user[j].sockfd, sendmsg, sizeof(sendmsg));
+//	 		pthread_mutex_unlock(&curUser_mutex);
+
+	 	}else{
+//	 		pthread_mutex_lock(&curUser_mutex);
+	 		for (i = 0; i < topic[uTopic].curUser; i++)
+	 			if (i == uid) continue;
+	 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
+//	 		pthread_mutex_unlock(&curUser_mutex);
+	 	}
+
+	}
+
+ 	printf("\n%s  finish chat.\n", topic[uTopic].user[uid].username);
+    pthread_mutex_lock(&curUser_mutex);
+        for (i = uid; i < topic[uTopic].curUser - 1; i++){
+            memset(topic[uTopic].user[i].username, '0', 50);
+            strcpy(topic[uTopic].user[i].username, topic[uTopic].user[i + 1].username);
+            topic[uTopic].user[i].sockfd = topic[uTopic].user[i + 1].sockfd;
+        }
+        topic[uTopic].curUser --;
+    pthread_mutex_unlock(&curUser_mutex);
+
+    free(arg);
+
+    close (sockfd);
+    return (NULL);
+
+}
+
 void sendFile (int connfd) {
 	int file_size;
 	char file_name[256];
@@ -243,17 +334,17 @@ int main (int argc, char **argv){
 	struct sockaddr_in cliaddr, servaddr;
 
 	for (i = 0; i < MAXTOPIC; i++)
-		topic[i].n_user = 0;
+		topic[i].curUser = 0;
 
 	listenfd = socket (AF_INET, SOCK_STREAM, 0);
 
 	bzero (&servaddr, sizeof (servaddr));
 	servaddr.sin_family  	 = AF_INET;
 	servaddr.sin_addr.s_addr = htonl (INADDR_ANY);
-	servaddr.sin_port 		 = htonl (PORT);
+	servaddr.sin_port 		 = htons (PORT);
 	bind (listenfd, (struct sockaddr *) &servaddr, sizeof (servaddr));
 
-	listen (listenfd, MAXUSER);
+	listen (listenfd, 100);
 	for (;;){
 		clilen = sizeof (cliaddr);
 		iptr = malloc (sizeof(int));
@@ -262,7 +353,8 @@ int main (int argc, char **argv){
 		char *addr;
 		addr = inet_ntoa (cliaddr.sin_addr);
 		printf ("\nOne client %s:%d connected.", addr, cliaddr.sin_port);
-		pthread_create (&tid, NULL, chat, (void*) iptr);
+//		sleep(1);
+		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}
 
 	free (iptr);
