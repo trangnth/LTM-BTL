@@ -7,11 +7,11 @@
 	4. Cho phep nguoi dung gui file theo nhom
 
  * Mo ta phan chat nhom va chat rieng: 
- 	-> clinet login: nhap username va chon topic minh muon 
+ 	-> clinet login: chon topic minh muon va nhap username
  	-> thong bao cho server biet
  	-> server luu thong tin cho tung user
- 	-> user chon muon chat rieng hay nhom, neu rieng thi chon user muon chat
- 	-> user nhap mess, nhan '@' de chuyen che do chat hoac ket thuc chat 
+ 	-> mac dinh client se chat nhom, neu muon chat rieng thi nhap theo cu phap '!username: message'
+ 	-> user nhap mess, nhan '@' ket thuc chat 
  	-> server la nguoi trung gian, nhan va chuyen mess toi dung nguoi nhan
 
  * Cac thanh vien:
@@ -75,11 +75,11 @@ static void *chat (void *arg){
 				}
 				write (sockfd, userTopic, sizeof (userTopic));
 		}
-printf ("\nSend list topic done!");
+fprintf (stdout, "\nSend list topic done!");
 		//recv topic from client
 		int uTopic;
 		read (sockfd, &uTopic, sizeof (int));
-		uid = topic[uTopic].curUser;
+		uid = topic[uTopic].curUser;	//id of user in topic
 		topic[uTopic].curUser ++;
 	pthread_mutex_unlock (&curUser_mutex);
 
@@ -93,6 +93,7 @@ printf ("\nSend list topic done!");
  	while(1){
 	 	char recvmsg[1024] = {0}, *msg, sendmsg[1024] = {0};
 	 	read (sockfd, recvmsg, sizeof(recvmsg));
+fprintf (stdout, "\nrecvmsg: %s\n", recvmsg);
 
 	 	if (strcmp(recvmsg, "@") == 0) 
 	 		break;
@@ -106,7 +107,7 @@ printf ("\nSend list topic done!");
 	 		msg = strstr(recvmsg, ":");//lay mess tu ':' tro di
 	 		strcat(sendmsg, topic[uTopic].user[uid].username);
 	 		strcat(sendmsg, msg);
-
+fprintf(stdout, "\nstr: %s\n", str);
 //	 		pthread_mutex_lock(&curUser_mutex);
 	 		for (i = 0; i < MAXTOPIC; i++)
 	 			for (j = 0; j < topic[i].curUser; j++)
@@ -255,7 +256,7 @@ int main (int argc, char **argv){
 
 //		char *addr;
 //		addr = inet_ntoa (cliaddr.sin_addr);
-	fprintf (stdout,"\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
+	fprintf (stdout, "\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
 		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}
 
