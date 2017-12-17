@@ -46,9 +46,9 @@ static void *writemsg (void *arg){
             strcat (sendmsg, username);
             strcat (sendmsg, ": ");
             strcat (sendmsg, msg);
-        }
-        
-        write (sockfd, sendmsg, sizeof (sendmsg)); //chat user
+		write (sockfd, sendmsg, sizeof (msg));
+        }else
+        	write (sockfd, msg, sizeof (msg)); //chat user
     }
 }
 
@@ -56,8 +56,9 @@ static void *writemsg (void *arg){
 static void *readmsg (void *arg){
     int sockfd = *((int *)arg);
     char buff [1024] = {0};
-    while (read (sockfd, buff, sizeof(buff)) > 0){
-        printf ("\n%s", buff);
+	printf ("\n");
+    while (read (sockfd, buff, sizeof(buff))> 0){
+        printf ("%s\n", buff);
         //buff = {0};
     }
 }
@@ -95,7 +96,7 @@ int main(int argc, char **argv){
 
     printf("\nChose topic that you want to subcribe: ");
     scanf ("%d", &topic);
-topic = 1;
+//topic = 1;
     write (*sockfd, &topic, sizeof(int));
 
 //    fflush (stdin);

@@ -75,7 +75,7 @@ static void *chat (void *arg){
 				}
 				write (sockfd, userTopic, sizeof (userTopic));
 		}
-fprintf (stdout, "\nSend list topic done!");
+fprintf (stdout, "\n");
 		//recv topic from client
 		int uTopic;
 		read (sockfd, &uTopic, sizeof (int));
@@ -93,7 +93,7 @@ fprintf (stdout, "\nSend list topic done!");
  	while(1){
 	 	char recvmsg[1024] = {0}, *msg, sendmsg[1024] = {0};
 	 	read (sockfd, recvmsg, sizeof(recvmsg));
-fprintf (stdout, "\nrecvmsg: %s\n", recvmsg);
+//fprintf (stdout, "\nrecvmsg: %s a\n", recvmsg);
 
 	 	if (strcmp(recvmsg, "@") == 0) 
 	 		break;
@@ -107,7 +107,7 @@ fprintf (stdout, "\nrecvmsg: %s\n", recvmsg);
 	 		msg = strstr(recvmsg, ":");//lay mess tu ':' tro di
 	 		strcat(sendmsg, topic[uTopic].user[uid].username);
 	 		strcat(sendmsg, msg);
-fprintf(stdout, "\nstr: %s\n", str);
+//fprintf(stdout, "\nstr: %s\nmsg: %s  a", str, msg);
 //	 		pthread_mutex_lock(&curUser_mutex);
 	 		for (i = 0; i < MAXTOPIC; i++)
 	 			for (j = 0; j < topic[i].curUser; j++)
@@ -117,9 +117,11 @@ fprintf(stdout, "\nstr: %s\n", str);
 
 	 	}else{
 //	 		pthread_mutex_lock(&curUser_mutex);
-	 		for (i = 0; i < topic[uTopic].curUser; i++)
+	 		for (i = 0; i < topic[uTopic].curUser; i++){
 	 			if (i == uid) continue;
+				fprintf (stdout, "\n\'%d:%s\'", topic[uTopic].user[i].sockfd, topic[uTopic].user[i].username);
 	 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
+			}
 //	 		pthread_mutex_unlock(&curUser_mutex);
 	 	}
 
