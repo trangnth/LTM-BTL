@@ -28,7 +28,7 @@
 
 //thread write
 static void *writemsg (void *arg){
-    int sockfd = *((int *)arg)
+    int sockfd = *((int *)arg);
     while(1){
         char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
         fflush (stdin);
@@ -55,7 +55,7 @@ static void *readmsg (void *arg){
     char buff [1024] = {0};
     while (read (sockfd, buff, sizeof(buff)) > 0){
         printf ("\n%s", buff);
-        buff = {0};
+        //buff = {0};
     }
 }
 
