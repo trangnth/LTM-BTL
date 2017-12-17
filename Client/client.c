@@ -66,7 +66,7 @@ int main(int argc, char **argv){
     printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.")
 
     //Start chat
-    
+
     while(){
         char msg[1024] = {0} sendmsg[1024] = {0}, recvmsg[1024] = {0};
         fflush (stdin);
