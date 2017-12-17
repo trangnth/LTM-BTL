@@ -52,8 +52,6 @@ struct Topic topic[MAXTOPIC];
 
 pthread_mutex_t curUser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-//int curUser = 0; //current user
-
 static void *chat (void *arg){
 	int sockfd, uid;
 
@@ -73,6 +71,7 @@ static void *chat (void *arg){
 				write (sockfd, userTopic, sizeof (userTopic));
 		}
 		fprintf (stdout, "\n");
+
 		//recv topic from client
 		int uTopic;
 		read (sockfd, &uTopic, sizeof (int));
@@ -89,21 +88,22 @@ static void *chat (void *arg){
 	topic[uTopic].user[uid].sockfd = sockfd;
 
 
- 	//recvice message
+ 	//recvice and send message
  	while(1){
 	 	char recvmsg[1024] = {0}, *msg, sendmsg[1024] = {0};
 	 	read (sockfd, recvmsg, sizeof(recvmsg));
 
-	 	if (strcmp(recvmsg, "@") == 0) 
+	 	if (strcmp(recvmsg, "@") == 0) // user finish chat
 	 		break;
 	 	
+	 	//Chat user
 	 	char buff[1024], *str;
 		strcpy (buff, recvmsg);
-                str = buff;
+		str = buff;
 	 	if (str [0] == '!'){
 	 		str ++;
-	 		strtok (str, ":"); //lay user => str vaf buff = '!username'
-	 		msg = strstr(recvmsg, ":");//lay mess tu ':' tro di
+	 		strtok (str, ":"); 
+	 		msg = strstr(recvmsg, ":");
 	 		strcat(sendmsg, topic[uTopic].user[uid].username);
 	 		strcat(sendmsg, msg);
 //	 		pthread_mutex_lock(&curUser_mutex);
@@ -113,11 +113,10 @@ static void *chat (void *arg){
 	 					write (topic[i].user[j].sockfd, sendmsg, sizeof(sendmsg));
 //	 		pthread_mutex_unlock(&curUser_mutex);
 
-	 	}else{
+	 	}else{  //Chat group
 //	 		pthread_mutex_lock(&curUser_mutex);
 	 		for (i = 0; i < topic[uTopic].curUser; i++){
 	 			if (i == uid) continue;
-		//		fprintf (stdout, "\n\'%d:%s\'", topic[uTopic].user[i].sockfd, topic[uTopic].user[i].username);
 	 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
 			}
 //	 		pthread_mutex_unlock(&curUser_mutex);
@@ -125,7 +124,7 @@ static void *chat (void *arg){
 
 	}
 
- 	printf("\n%s  finish chat.\n", topic[uTopic].user[uid].username);
+ 	printf("\n%s finish chat.\n", topic[uTopic].user[uid].username);
     pthread_mutex_lock(&curUser_mutex);
         for (i = uid; i < topic[uTopic].curUser - 1; i++){
             memset(topic[uTopic].user[i].username, '0', 50);
@@ -234,7 +233,6 @@ int main (int argc, char **argv){
 	socklen_t clilen;
 	int *iptr, i;
 	pthread_t tid;
-//	pid_t childpid;
 	struct sockaddr_in cliaddr, servaddr;
 
 	for (i = 0; i < MAXTOPIC; i++)
@@ -254,7 +252,7 @@ int main (int argc, char **argv){
 		iptr = malloc (sizeof(int));
 		*iptr = accept (listenfd, (struct sockaddr *) &cliaddr, &clilen);
 
-	fprintf (stdout, "\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
+		fprintf (stdout, "\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
 		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}
 
