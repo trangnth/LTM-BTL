@@ -26,11 +26,45 @@
 #define MAXTOPIC 5
 #define PORT 4000
 
+//thread write
+static void *writemsg (void *arg){
+    int sockfd = *((int *)arg)
+    while(1){
+        char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
+        fflush (stdin);
+        fgets (msg, 1024, stdin);
+printf ("%s", msg);
+        if (strcmp (msg, "@") == 0){
+            write (sockfd, msg, sizeof (msg));
+            break;
+        }
+        if (msg[0] !=  '!'){
+            strcat (sendmsg, "Topic. ");
+            strcat (sendmsg, username);
+            strcat (sendmsg, ": ");
+            strcat (sendmsg, msg);
+        }
+        
+        write (sockfd, sendmsg, sizeof (sendmsg));
+    }
+}
+
+//thread read
+static void *readmsg (void *arg){
+    int sockfd = *((int *)arg);
+    char buff [1024] = {0};
+    while (read (sockfd, buff, sizeof(buff)) > 0){
+        printf ("\n%s", buff);
+        buff = {0};
+    }
+}
+
+
 int main(int argc, char **argv){
 	int sockfd, i, j, uid, topic;
 	struct sockaddr_in servaddr;
 	char username[50] = {0};
-
+    pthread_t w_tid, r_tid;
 
 	if ((sockfd = socket (AF_INET, SOCK_STREAM, 0)) == -1){
         fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
@@ -61,7 +95,7 @@ int main(int argc, char **argv){
 
     fflush (stdin);
     printf ("\nEnter your name: ");
-sleep(1);
+//sleep(1);
     fgets (username, 50, stdin);
     username[strcspn (username, "\n")] = 0;
 printf("\n%s\n", username);
@@ -70,29 +104,9 @@ printf("\n%s\n", username);
     printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.\n");
 
     //Start chat
-    
-    while(1){
-        char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
-        fflush (stdin);
-        fgets (msg, 1024, stdin);
-printf ("%s", msg);
-	if (strcmp (msg, "@") == 0){
-            write (sockfd, msg, sizeof (msg));
-            break;
-        }
-        if (msg[0] !=  '!'){
-            //strcat (sendmsg, topic);
-            strcat (sendmsg, "Topic. ");
-            strcat (sendmsg, username);
-            strcat (sendmsg, ": ");
-            strcat (sendmsg, msg);
-        }
-        //if (strcmp (msg, "@") == 0){
-          //  write (sockfd, msg, sizeof (msg));
-            //break;
-       // }
-        write (sockfd, sendmsg, sizeof (sendmsg));
-    }
+    pthread_create (&w_tid, NULL, &writemsg, (void *) sockfd);
+    pthread_create (&r_tid, NULL, &readmsg, (void *) sockfd);
+
 
     printf ("\nFinish chat.\n");
     close (sockfd);

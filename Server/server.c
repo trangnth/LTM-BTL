@@ -78,7 +78,7 @@ printf ("hello\n");
 					strcat (userTopic, topic[i].user[j].username);
 					strcat (userTopic, " ");
 				}
-sleep(1);
+//sleep(1);
 				write (sockfd, userTopic, sizeof (userTopic));
 			//}
 		}
