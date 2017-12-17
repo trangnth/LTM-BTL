@@ -114,8 +114,7 @@ static void *writemsg (void *arg){
         char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
         fflush (stdin);
         fgets (msg, 1024, stdin);
-        char empty = msg[0];
-	      msg[strcspn(msg,"\n")] = 0;
+        msg[strcspn(msg,"\n")] = 0;
         if (strcmp (msg, "@") == 0){ //Finish chat
             write (sockfd, msg, sizeof (msg));
             break;
@@ -176,17 +175,21 @@ int main(int argc, char **argv){
         read (*sockfd, userTopic, sizeof(userTopic));
         printf ("\n%d. %s", i, userTopic);
     }
-	do{
-    printf("\nChoose group that you want to subcribe: ");
-    scanf ("%d", &topic);
+
+    //send topic to server
+    do{
+        printf("\nChoose group that you want to subcribe: ");
+        scanf ("%d", &topic);
 	}while (topic > 4 || topic < 0);
     write (*sockfd, &topic, sizeof(int));
 
+    //send username to server
     printf ("Enter your name: ");
 	int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
     fgets (username, sizeof(username), stdin);
     username[strcspn (username, "\n")] = 0;
     write (*sockfd, username, sizeof (username));
+
     printf ("\nWelcome to group %d! (Enter your message)", topic);
     printf ("\nEnter \"!username: message\" to chat with other user or \"@\" to finish.\n");
     printf ("\nEnter \"$filename\" to transfer File or \"@\" to finish.\n");
