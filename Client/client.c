@@ -22,9 +22,90 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
-
+#include <sys/stat.h>
 #define MAXTOPIC 5
 #define PORT 4000
+
+char username[50] = {0};
+
+void sendFile (int connfd, char file_name[256]) {
+	int file_size;
+	int remain_data;
+	struct stat st;
+	char buffer[1024];
+  char *ptr;
+  printf("davao truyen file %s\n", file_name);
+    ptr = strtok(file_name, "$");
+
+		FILE *fs = fopen(ptr, "rb");
+		if(fs == NULL) {
+			printf("ERROR: File %s not found on server.\n", ptr);
+		}
+		else {
+			stat(ptr, &st);
+			remain_data = st.st_size;
+			file_size = remain_data;
+			printf("file_size la %d\n", file_size);
+			write(connfd, &file_size, sizeof(int));
+			while(remain_data > 0) {
+				if(remain_data < 1024) {
+					fread(buffer, remain_data, 1, fs);
+					write(connfd, buffer, remain_data);
+				}
+				else {
+					fread(buffer, 1024, 1, fs);
+					write(connfd, buffer, 1024);
+				}
+				remain_data-=1024;
+			}
+		}
+		fclose(fs);
+		printf("Send File Success!\n");
+}
+
+void receiveFile (int sockfd) {
+	char buffer[1024];
+	char file_name[256];
+	int file_size;
+	while(1) {
+      int n = read(sockfd, file_name, sizeof(file_name));
+			printf("Nhap ten file (Enter \"@\" to quit): ");
+			fgets(file_name, 256, stdin);
+			file_name[strcspn(file_name, "\n")]=0;
+			write(sockfd, file_name, strlen(file_name));
+			if(strcmp(file_name, "@") == 0) {
+				break;
+			}
+			read(sockfd, &file_size, sizeof(int));
+			printf("file_size la %d\n", file_size);
+
+		if(file_size == -1) {
+			printf("File not exists\n");
+			break;
+		}
+		else {
+			FILE *fr = fopen(file_name, "w");
+			printf("Downloading...\n");
+
+			while(file_size > 0) {
+
+				if(file_size < 1024) {
+					read(sockfd, buffer, file_size);
+					fwrite(buffer, file_size, 1,fr);
+				}
+				else {
+					read(sockfd, buffer, 1024);
+					fwrite(buffer, 1024, 1, fr);
+				}
+				file_size-=1024;
+			}
+			fclose(fr);
+
+			printf("Download Success\n");
+		}
+	}
+}
+
 
 //thread write
 static void *writemsg (void *arg){
@@ -33,19 +114,25 @@ static void *writemsg (void *arg){
         char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
         fflush (stdin);
         fgets (msg, 1024, stdin);
-printf ("%s", msg);
-        if (strcmp (msg, "@") == 0){
+        char empty = msg[0];
+	      msg[strcspn(msg,"\n")] = 0;
+        if (strcmp (msg, "@") == 0){ //Finish chat
             write (sockfd, msg, sizeof (msg));
             break;
         }
-        if (msg[0] !=  '!'){
-            strcat (sendmsg, "Topic. ");
+        //truyen file len server
+        if(msg[0] == '$') {
+          printf("chuc nang truyen file\n");
+          write (sockfd, msg, sizeof (msg));
+          sendFile(sockfd, msg);
+        } else if (msg[0] !=  '!'){ //chat group
+            strcat (sendmsg, "G>");
             strcat (sendmsg, username);
             strcat (sendmsg, ": ");
             strcat (sendmsg, msg);
-        }
-
-        write (sockfd, sendmsg, sizeof (sendmsg));
+		        write (sockfd, sendmsg, sizeof (msg));
+        } else
+        	write (sockfd, msg, sizeof (msg)); //chat user
     }
 }
 
@@ -53,20 +140,21 @@ printf ("%s", msg);
 static void *readmsg (void *arg){
     int sockfd = *((int *)arg);
     char buff [1024] = {0};
-    while (read (sockfd, buff, sizeof(buff)) > 0){
-        printf ("\n%s", buff);
+	printf ("\n");
+    while (read (sockfd, buff, sizeof(buff))> 0){
+        printf ("%s\n", buff);
         //buff = {0};
     }
 }
 
 
 int main(int argc, char **argv){
-	int sockfd, i, j, uid, topic;
+	int *sockfd, i, j, uid, topic;
 	struct sockaddr_in servaddr;
-	char username[50] = {0};
     pthread_t w_tid, r_tid;
+	sockfd = malloc (sizeof (int));
 
-	if ((sockfd = socket (AF_INET, SOCK_STREAM, 0)) == -1){
+	if ((*sockfd = socket (AF_INET, SOCK_STREAM, 0)) == -1){
         fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
 		exit (EXIT_FAILURE);
 	}
@@ -76,7 +164,7 @@ int main(int argc, char **argv){
 
     inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
 
-    if ((connect(sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == 1){
+    if ((connect(*sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == 1){
 	fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
 	exit(EXIT_FAILURE);
     }
@@ -85,30 +173,31 @@ int main(int argc, char **argv){
     printf ("\nList user online: ");
     for (i = 0; i < MAXTOPIC; i++){
         char userTopic[500] = {0};
-        read (sockfd, userTopic, sizeof(userTopic));
+        read (*sockfd, userTopic, sizeof(userTopic));
         printf ("\n%d. %s", i, userTopic);
     }
-
-    printf("\nChose topic that you want to subcribe: ");
+	do{
+    printf("\nChoose group that you want to subcribe: ");
     scanf ("%d", &topic);
-    write (sockfd, &topic, sizeof(int));
+	}while (topic > 4 || topic < 0);
+    write (*sockfd, &topic, sizeof(int));
 
-    fflush (stdin);
-    printf ("\nEnter your name: ");
-//sleep(1);
-    fgets (username, 50, stdin);
+    printf ("Enter your name: ");
+	int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
+    fgets (username, sizeof(username), stdin);
     username[strcspn (username, "\n")] = 0;
-printf("\n%s\n", username);
-    write (sockfd, username, sizeof (username));
+    write (*sockfd, username, sizeof (username));
     printf ("\nWelcome to group %d! (Enter your message)", topic);
-    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.\n");
-
+    printf ("\nEnter \"!username: message\" to chat with other user or \"@\" to finish.\n");
+    printf ("\nEnter \"$filename\" to transfer File or \"@\" to finish.\n");
     //Start chat
     pthread_create (&w_tid, NULL, &writemsg, (void *) sockfd);
     pthread_create (&r_tid, NULL, &readmsg, (void *) sockfd);
-
+	  pthread_join(w_tid, NULL);
+	  pthread_join(r_tid, NULL);
 
     printf ("\nFinish chat.\n");
-    close (sockfd);
+    close (*sockfd);
+	free (sockfd);
 	return 0;
 }
