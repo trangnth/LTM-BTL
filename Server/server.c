@@ -39,10 +39,7 @@
 struct User
 {
 	char username[50];
-	//int uid;
-	//int topic;
 	int sockfd;
-	//int typeUser; //subcriber (1) or user (0) = chat with user or group
 };
 
 struct Topic
@@ -75,10 +72,14 @@ static void *chat (void *arg){
 				}
 				write (sockfd, userTopic, sizeof (userTopic));
 		}
-fprintf (stdout, "\n");
+		fprintf (stdout, "\n");
 		//recv topic from client
 		int uTopic;
 		read (sockfd, &uTopic, sizeof (int));
+		if (uTopic > 4 || uTopic < 0){
+			close(sockfd);
+			return NULL;
+		}
 		uid = topic[uTopic].curUser;	//id of user in topic
 		topic[uTopic].curUser ++;
 	pthread_mutex_unlock (&curUser_mutex);
@@ -87,13 +88,11 @@ fprintf (stdout, "\n");
 	read (sockfd, topic[uTopic].user[uid].username, sizeof (topic[uTopic].user[uid].username));
 	topic[uTopic].user[uid].sockfd = sockfd;
 
- 	//printf ("\nName: %s, sockfd: %d", topic[uTopic].user[uid].username, topic[uTopic].user[uid].sockfd);
 
  	//recvice message
  	while(1){
 	 	char recvmsg[1024] = {0}, *msg, sendmsg[1024] = {0};
 	 	read (sockfd, recvmsg, sizeof(recvmsg));
-//fprintf (stdout, "\nrecvmsg: %s a\n", recvmsg);
 
 	 	if (strcmp(recvmsg, "@") == 0) 
 	 		break;
@@ -107,7 +106,6 @@ fprintf (stdout, "\n");
 	 		msg = strstr(recvmsg, ":");//lay mess tu ':' tro di
 	 		strcat(sendmsg, topic[uTopic].user[uid].username);
 	 		strcat(sendmsg, msg);
-//fprintf(stdout, "\nstr: %s\nmsg: %s  a", str, msg);
 //	 		pthread_mutex_lock(&curUser_mutex);
 	 		for (i = 0; i < MAXTOPIC; i++)
 	 			for (j = 0; j < topic[i].curUser; j++)
@@ -119,7 +117,7 @@ fprintf (stdout, "\n");
 //	 		pthread_mutex_lock(&curUser_mutex);
 	 		for (i = 0; i < topic[uTopic].curUser; i++){
 	 			if (i == uid) continue;
-				fprintf (stdout, "\n\'%d:%s\'", topic[uTopic].user[i].sockfd, topic[uTopic].user[i].username);
+		//		fprintf (stdout, "\n\'%d:%s\'", topic[uTopic].user[i].sockfd, topic[uTopic].user[i].username);
 	 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
 			}
 //	 		pthread_mutex_unlock(&curUser_mutex);
@@ -256,8 +254,6 @@ int main (int argc, char **argv){
 		iptr = malloc (sizeof(int));
 		*iptr = accept (listenfd, (struct sockaddr *) &cliaddr, &clilen);
 
-//		char *addr;
-//		addr = inet_ntoa (cliaddr.sin_addr);
 	fprintf (stdout, "\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
 		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}

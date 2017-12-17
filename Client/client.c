@@ -36,13 +36,12 @@ static void *writemsg (void *arg){
         fflush (stdin);
         fgets (msg, 1024, stdin);
 	msg[strcspn(msg,"\n")] = 0;
-//printf ("%s", msg);
         if (strcmp (msg, "@") == 0){ //Finish chat
             write (sockfd, msg, sizeof (msg));
             break;
         }
         if (msg[0] !=  '!'){ //chat group
-            strcat (sendmsg, "Topic. ");
+            strcat (sendmsg, "G>");
             strcat (sendmsg, username);
             strcat (sendmsg, ": ");
             strcat (sendmsg, msg);
@@ -67,7 +66,6 @@ static void *readmsg (void *arg){
 int main(int argc, char **argv){
 	int *sockfd, i, j, uid, topic;
 	struct sockaddr_in servaddr;
-	//char username[50] = {0};
     pthread_t w_tid, r_tid;
 	sockfd = malloc (sizeof (int));	
 
@@ -93,24 +91,19 @@ int main(int argc, char **argv){
         read (*sockfd, userTopic, sizeof(userTopic));
         printf ("\n%d. %s", i, userTopic);
     }
-
-    printf("\nChose topic that you want to subcribe: ");
+	do{
+    printf("\nChoose group that you want to subcribe: ");
     scanf ("%d", &topic);
-//topic = 1;
+	}while (topic > 4 || topic < 0);
     write (*sockfd, &topic, sizeof(int));
 
-//    fflush (stdin);
-    printf ("\nEnter your name: ");
-//sleep(1);
-int ch; while((ch=getchar())!='\n'&&ch!=EOF);
-//	fflush (stdin);
-//	scanf ("%s", username);
+    printf ("Enter your name: ");
+	int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
     fgets (username, sizeof(username), stdin);
     username[strcspn (username, "\n")] = 0;
-//printf("\n%s\n", username);
     write (*sockfd, username, sizeof (username));
     printf ("\nWelcome to group %d! (Enter your message)", topic);
-    printf ("\nEnter \"!username: message\" to chat with user or \"@\" to finish.\n");
+    printf ("\nEnter \"!username: message\" to chat with other user or \"@\" to finish.\n");
 
     //Start chat
     pthread_create (&w_tid, NULL, &writemsg, (void *) sockfd);
