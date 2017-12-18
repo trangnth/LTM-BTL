@@ -52,8 +52,7 @@ struct Topic topic[MAXTOPIC];
 
 pthread_mutex_t curUser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-<<<<<<< HEAD
-//int curUser = 0; //current user
+//.<<<<<<< HEAD
 
 void sendFile (int connfd) {
 	int file_size;
@@ -132,8 +131,8 @@ void receiveFile (int sockfd, char file_name[256]) {
 		}
 }
 
-=======
->>>>>>> a66337c99f8adf8abbb6cb855c4295da40bd8b9b
+//=======
+//>>>>>>> a66337c99f8adf8abbb6cb855c4295da40bd8b9b
 static void *chat (void *arg){
 	int sockfd, uid;
 
