@@ -63,7 +63,7 @@ void sendLtopic(int sockfd){
 				strcat (userTopic, topic[i].user[j].username);
 				strcat (userTopic, " ");
 			}
-			write (sockfd, userTopic, sizeof (userTopic));
+		write (sockfd, userTopic, sizeof (userTopic));
 	}
 }
 //=======
@@ -181,19 +181,18 @@ static void *chat (void *arg){
 	pthread_mutex_unlock (&curUser_mutex);
 
 	//recv username client
-	int tmp = 0;
 	while(1){
+		int tmp = 0;
 		read (sockfd, topic[uTopic].user[uid].username, sizeof (topic[uTopic].user[uid].username));
 		for (i = 0; i < MAXTOPIC; i++)
-	 		for (j = 0; j < topic[i].curUser - 1 ; j++)
+	 		for (j = 0; j < topic[i].curUser - 1; j++)
 	 			if (strcmp(topic[i].user[j].username, topic[uTopic].user[uid].username) == 0){
 	 				tmp = 1;
-	 				write (sockfd, &tmp, sizeof(int));
-	 				break;
 	 			}
+		write (sockfd, &tmp, sizeof(int));
+		if (tmp == 0) break;
 	}
 	topic[uTopic].user[uid].sockfd = sockfd;
-
 
  	//recvice and send message
  	while(1){
@@ -211,6 +210,7 @@ static void *chat (void *arg){
 	 		str ++;
 	 		strtok (str, ":");
 	 		msg = strstr(recvmsg, ":");
+			strcat(sendmsg, ">");
 	 		strcat(sendmsg, topic[uTopic].user[uid].username);
 	 		strcat(sendmsg, msg);
 //	 		pthread_mutex_lock(&curUser_mutex);
@@ -220,16 +220,21 @@ static void *chat (void *arg){
 	 					write (topic[i].user[j].sockfd, sendmsg, sizeof(sendmsg));
 //	 		pthread_mutex_unlock(&curUser_mutex);
 
-	 	}else{
+//	 	}else if(strcmp (recvmsg, "@L") == 0){
+//printf ("send list\n");
+//			sendLtopic(sockfd);
+		}else{
 			// Nhan FIle tu Client
 			if(str[0] == '$') {
-				printf("Downlod file %s\n", recvmsg);
+				printf("Download file %s\n", recvmsg);
 				receiveFile(sockfd, recvmsg);
 			}
 //	 		pthread_mutex_lock(&curUser_mutex);
 	 		for (i = 0; i < topic[uTopic].curUser; i++){
 	 			if (i == uid) continue;
 	 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
+//if (str[0] == '$')
+//sendFile(topic[uTopic].user[i].sockfd, recvmsg);
 			}
 //	 		pthread_mutex_unlock(&curUser_mutex);
 	 	}
