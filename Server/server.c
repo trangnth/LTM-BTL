@@ -89,7 +89,7 @@ void sendFile (int connfd, char file_name[256]) {
 			printf("ERROR: File %s not found on server.\n", file_name);
 			file_size = -1;
 			write(connfd, &file_size, sizeof(int));
-			break;
+			return;
 		}
 		else {
 			stat(file_name, &st);
@@ -216,21 +216,20 @@ static void *chat (void *arg){
 		}else{
 			// Nhan File tu Client
 			if(str[0] == '$') {
-				printf("Download file %s\n", recvmsg);
-				receiveFile(sockfd, recvmsg);
+				str ++;
+				strcpy (buff, str);
+				printf("Download file %s\n", buff);
+				receiveFile(sockfd, buff);
 				for (i = 0; i < topic[uTopic].curUser; i++){
 	 				if (i == uid) continue;
-		 				sendFile(topic[uTopic].user[i].sockfd), recvmsg	
+		 				sendFile(topic[uTopic].user[i].sockfd, buff);	
 	 			}	
 			}
 
 			if (str[0] == '#'){
 				printf("Download file %s\n", recvmsg);
 				receiveFile(sockfd, recvmsg);
-				char buf[1024], *p;
-				strcpy (buf, recvmsg);
-				p = buf;
-				p ++;
+				str ++;
 				strtok (str, ":");
 	 			msg = strstr(recvmsg, ":");
 	 			for (i = 0; i < MAXTOPIC; i++)

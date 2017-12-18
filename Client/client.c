@@ -92,7 +92,7 @@ void receiveFile (int sockfd, char file_name[256]) {
 
 		if(file_size == -1) {
 			printf("File not exists\n");
-			break;
+			return;
 		}
 		else {
 			FILE *fr = fopen(file_name, "w");
