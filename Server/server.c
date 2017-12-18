@@ -69,21 +69,21 @@ void sendLtopic(int sockfd){
 //=======
 //>>>>>> b489953ec601f611b85473ed7fdf99d5c2fcdb1f
 
-void sendFile (int connfd) {
+void sendFile (int connfd, char file_name[256]) {
 	int file_size;
-	char file_name[256];
+	
 	int remain_data;
 	struct stat st;
 	char buffer[1024];
 
-	while(1) {
-		int n = read(connfd, file_name, sizeof(file_name));
-		file_name[n] = '\0';
-		if(strcmp(file_name, "@") == 0) {
-			file_size = -1;
-			write(connfd, &file_size, sizeof(int));
-			break;
-		}
+	//while(1) {
+		//int n = read(connfd, file_name, sizeof(file_name));
+		//file_name[n] = '\0';
+		//if(strcmp(file_name, "@") == 0) {
+		//	file_size = -1;
+		//	write(connfd, &file_size, sizeof(int));
+		//	break;
+		//}
 		FILE *fs = fopen(file_name, "rb");
 		if(fs == NULL) {
 			printf("ERROR: File %s not found on server.\n", file_name);
@@ -111,7 +111,7 @@ void sendFile (int connfd) {
 		}
 		fclose(fs);
 		printf("Send File Success!\n");
-	}
+	//}
 }
 
 void receiveFile (int sockfd, char file_name[256]) {
@@ -157,15 +157,7 @@ static void *chat (void *arg){
 	pthread_mutex_lock (&curUser_mutex);
 
 		int i, j;
-		//send list topic
-		// for (i = 0; i < MAXTOPIC; i++){
-		// 	char userTopic[500] = {0};
-		// 		for (j = 0; j < topic[i].curUser; j++){
-		// 			strcat (userTopic, topic[i].user[j].username);
-		// 			strcat (userTopic, " ");
-		// 		}
-		// 		write (sockfd, userTopic, sizeof (userTopic));
-		// }
+	
 		sendLtopic(sockfd);
 		fprintf (stdout, "\n");
 
@@ -213,30 +205,47 @@ static void *chat (void *arg){
 			strcat(sendmsg, ">");
 	 		strcat(sendmsg, topic[uTopic].user[uid].username);
 	 		strcat(sendmsg, msg);
-//	 		pthread_mutex_lock(&curUser_mutex);
+
 	 		for (i = 0; i < MAXTOPIC; i++)
 	 			for (j = 0; j < topic[i].curUser; j++)
 	 				if (strcmp(topic[i].user[j].username, str) == 0)
 	 					write (topic[i].user[j].sockfd, sendmsg, sizeof(sendmsg));
-//	 		pthread_mutex_unlock(&curUser_mutex);
 
 //	 	}else if(strcmp (recvmsg, "@L") == 0){
-//printf ("send list\n");
 //			sendLtopic(sockfd);
 		}else{
-			// Nhan FIle tu Client
+			// Nhan File tu Client
 			if(str[0] == '$') {
 				printf("Download file %s\n", recvmsg);
 				receiveFile(sockfd, recvmsg);
+				for (i = 0; i < topic[uTopic].curUser; i++){
+	 				if (i == uid) continue;
+		 				sendFile(topic[uTopic].user[i].sockfd), recvmsg	
+	 			}	
 			}
-//	 		pthread_mutex_lock(&curUser_mutex);
+
+			if (str[0] == '#'){
+				printf("Download file %s\n", recvmsg);
+				receiveFile(sockfd, recvmsg);
+				char buf[1024], *p;
+				strcpy (buf, recvmsg);
+				p = buf;
+				p ++;
+				strtok (str, ":");
+	 			msg = strstr(recvmsg, ":");
+	 			for (i = 0; i < MAXTOPIC; i++)
+	 			for (j = 0; j < topic[i].curUser; j++)
+	 				if (strcmp(topic[i].user[j].username, str) == 0)
+	 					sendFile(topic[i].user[j].sockfd, msg);
+				
+			}
+
 	 		for (i = 0; i < topic[uTopic].curUser; i++){
 	 			if (i == uid) continue;
 	 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
 //if (str[0] == '$')
 //sendFile(topic[uTopic].user[i].sockfd, recvmsg);
 			}
-//	 		pthread_mutex_unlock(&curUser_mutex);
 	 	}
 
 	}

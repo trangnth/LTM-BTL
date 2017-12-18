@@ -74,19 +74,19 @@ void sendFile (int connfd, char file_name[256]) {
 		printf("Send File Success!\n");
 }
 
-void receiveFile (int sockfd) {
+void receiveFile (int sockfd, char file_name[256]) {
 	char buffer[1024];
-	char file_name[256];
+	
 	int file_size;
-	while(1) {
-      	int n = read(sockfd, file_name, sizeof(file_name));
-			printf("Enter file name (Enter \"@\" to quit): ");
-			fgets(file_name, 256, stdin);
-			file_name[strcspn(file_name, "\n")]=0;
-			write(sockfd, file_name, strlen(file_name));
-			if(strcmp(file_name, "@") == 0) {
-				break;
-			}
+	//while(1) {
+      //	int n = read(sockfd, file_name, sizeof(file_name));
+		//	printf("Enter file name (Enter \"@\" to quit): ");
+		//	fgets(file_name, 256, stdin);
+		//	file_name[strcspn(file_name, "\n")]=0;
+		//	write(sockfd, file_name, strlen(file_name));
+		//	if(strcmp(file_name, "@") == 0) {
+		///		break;
+			//}
 			read(sockfd, &file_size, sizeof(int));
 			printf("file_size la %d\n", file_size);
 
@@ -114,7 +114,7 @@ void receiveFile (int sockfd) {
 
 			printf("Download Success\n");
 		}
-	}
+	//}
 }
 
 
@@ -130,6 +130,12 @@ static void *writemsg (void *arg){
             write (sockfd, msg, sizeof (msg));
             break;
         }
+        //truyen file cho user
+        if(msg[0] == '#'){
+        	write (sockfd, msg, sizeof (msg));
+        	sendFile(sockfd, msg);
+        }
+
         //truyen file len server (group)
         if(msg[0] == '$') {
         	printf("Transfer file\n");
@@ -156,6 +162,14 @@ static void *readmsg (void *arg){
     char buff [1024] = {0};
 	printf ("\n");
     while (read (sockfd, buff, sizeof(buff))> 0){
+    	if(buff[0] == '$') {
+        	char *str;
+        	str = buff;
+        	str ++;
+        	strcpy(buff, str);
+        	printf("Receive file %s\n", buff);
+        	receiveFile(sockfd, buff);
+        }
         printf ("%s\n", buff);
         //buff = {0};
     }
@@ -216,7 +230,7 @@ int main(int argc, char **argv){
 
     printf ("\nWelcome to group %d! (Enter your message)", topic);
     printf ("\nEnter \"!username: message\" to chat with other user or \"@\" to finish.");
-    printf ("\nEnter \"$filename\" to transfer File to Group");
+    printf ("\nEnter \"$filename\" to transfer File to Group or \"#username:filename\" to transfer File to user");
     //printf ("\nEnter \"@L\" to receive list user online.\n");
 
     //Start chat
