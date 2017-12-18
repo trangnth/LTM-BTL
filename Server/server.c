@@ -52,7 +52,6 @@ struct Topic topic[MAXTOPIC];
 
 pthread_mutex_t curUser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-<<<<<<< HEAD
 //<<<<<<< HEAD
 
 //send list topic
@@ -67,9 +66,8 @@ void sendLtopic(int sockfd){
 			write (sockfd, userTopic, sizeof (userTopic));
 	}
 }
-=======
-//.<<<<<<< HEAD
->>>>>>> b489953ec601f611b85473ed7fdf99d5c2fcdb1f
+//=======
+//>>>>>> b489953ec601f611b85473ed7fdf99d5c2fcdb1f
 
 void sendFile (int connfd) {
 	int file_size;
