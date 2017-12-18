@@ -28,13 +28,24 @@
 
 char username[50] = {0};
 
+//recv list topic
+void recvLtopic(int sockfd){
+	int i;
+	printf ("\nList user online: ");
+    for (i = 0; i < MAXTOPIC; i++){
+        char userTopic[500] = {0};
+        read (sockfd, userTopic, sizeof(userTopic));
+        printf ("\n%d. %s", i, userTopic);
+    
+}
+
 void sendFile (int connfd, char file_name[256]) {
 	int file_size;
 	int remain_data;
 	struct stat st;
 	char buffer[1024];
-  char *ptr;
-  printf("davao truyen file %s\n", file_name);
+	char *ptr;
+	printf("Transfer file %s\n", file_name);
     ptr = strtok(file_name, "$");
 
 		FILE *fs = fopen(ptr, "rb");
@@ -45,7 +56,7 @@ void sendFile (int connfd, char file_name[256]) {
 			stat(ptr, &st);
 			remain_data = st.st_size;
 			file_size = remain_data;
-			printf("file_size la %d\n", file_size);
+			printf("File_size: %d\n", file_size);
 			write(connfd, &file_size, sizeof(int));
 			while(remain_data > 0) {
 				if(remain_data < 1024) {
@@ -68,8 +79,8 @@ void receiveFile (int sockfd) {
 	char file_name[256];
 	int file_size;
 	while(1) {
-      int n = read(sockfd, file_name, sizeof(file_name));
-			printf("Nhap ten file (Enter \"@\" to quit): ");
+      	int n = read(sockfd, file_name, sizeof(file_name));
+			printf("Enter file name (Enter \"@\" to quit): ");
 			fgets(file_name, 256, stdin);
 			file_name[strcspn(file_name, "\n")]=0;
 			write(sockfd, file_name, strlen(file_name));
@@ -119,18 +130,21 @@ static void *writemsg (void *arg){
             write (sockfd, msg, sizeof (msg));
             break;
         }
-        //truyen file len server
+        //truyen file len server (group)
         if(msg[0] == '$') {
-          printf("chuc nang truyen file\n");
-          write (sockfd, msg, sizeof (msg));
-          sendFile(sockfd, msg);
+        	printf("Transfer file\n");
+        	write (sockfd, msg, sizeof (msg));
+        	sendFile(sockfd, msg);
         } else if (msg[0] !=  '!'){ //chat group
             strcat (sendmsg, "G>");
             strcat (sendmsg, username);
             strcat (sendmsg, ": ");
             strcat (sendmsg, msg);
-		        write (sockfd, sendmsg, sizeof (msg));
-        } else
+		    write (sockfd, sendmsg, sizeof (msg));
+        } else if (strcmp (msg, "@L" == 0)){
+        	write (sockfd, msg, sizeof (msg));
+        	recvLtopic(sockfd);
+        }else
         	write (sockfd, msg, sizeof (msg)); //chat user
     }
 }
@@ -169,12 +183,13 @@ int main(int argc, char **argv){
     }
 
     //recv list topic
-    printf ("\nList user online: ");
-    for (i = 0; i < MAXTOPIC; i++){
-        char userTopic[500] = {0};
-        read (*sockfd, userTopic, sizeof(userTopic));
-        printf ("\n%d. %s", i, userTopic);
-    }
+    // printf ("\nList user online: ");
+    // for (i = 0; i < MAXTOPIC; i++){
+    //     char userTopic[500] = {0};
+    //     read (*sockfd, userTopic, sizeof(userTopic));
+    //     printf ("\n%d. %s", i, userTopic);
+    // }
+    recvLtopic (*sockfd);
 
     //send topic to server
     do{
@@ -184,20 +199,27 @@ int main(int argc, char **argv){
     write (*sockfd, &topic, sizeof(int));
 
     //send username to server
-    printf ("Enter your name: ");
-	int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
-    fgets (username, sizeof(username), stdin);
-    username[strcspn (username, "\n")] = 0;
-    write (*sockfd, username, sizeof (username));
+    while(1){
+	    printf ("Enter your name: ");
+		int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
+	    fgets (username, sizeof(username), stdin);
+	    username[strcspn (username, "\n")] = 0;
+	    write (*sockfd, username, sizeof (username));
+	    read (*sockfd, &tmp, sizeof(int));
+	    if (tmp == 0) break;
+	    else printf ("Name existed. ");
+	}
 
     printf ("\nWelcome to group %d! (Enter your message)", topic);
-    printf ("\nEnter \"!username: message\" to chat with other user or \"@\" to finish.\n");
-    printf ("\nEnter \"$filename\" to transfer File or \"@\" to finish.\n");
+    printf ("\nEnter \"!username: message\" to chat with other user or \"@\" to finish.");
+    printf ("\nEnter \"$filename\" to transfer File to Group \n");
+    printf ("\nEnter \"@L\" to receive list user online.\n");
+
     //Start chat
     pthread_create (&w_tid, NULL, &writemsg, (void *) sockfd);
     pthread_create (&r_tid, NULL, &readmsg, (void *) sockfd);
-	  pthread_join(w_tid, NULL);
-	  pthread_join(r_tid, NULL);
+	pthread_join(w_tid, NULL);
+	pthread_join(r_tid, NULL);
 
     printf ("\nFinish chat.\n");
     close (*sockfd);

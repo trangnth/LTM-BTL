@@ -52,8 +52,20 @@ struct Topic topic[MAXTOPIC];
 
 pthread_mutex_t curUser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-<<<<<<< HEAD
-//int curUser = 0; //current user
+//<<<<<<< HEAD
+
+//send list topic
+void sendLtopic(int sockfd){
+	int i, j;
+	for (i = 0; i < MAXTOPIC; i++){
+		char userTopic[500] = {0};
+			for (j = 0; j < topic[i].curUser; j++){
+				strcat (userTopic, topic[i].user[j].username);
+				strcat (userTopic, " ");
+			}
+			write (sockfd, userTopic, sizeof (userTopic));
+	}
+}
 
 void sendFile (int connfd) {
 	int file_size;
@@ -81,7 +93,7 @@ void sendFile (int connfd) {
 			stat(file_name, &st);
 			remain_data = st.st_size;
 			file_size = remain_data;
-			printf("file_size la %d\n", file_size);
+			printf("File_size: %d\n", file_size);
 			write(connfd, &file_size, sizeof(int));
 			while(remain_data > 0) {
 				if(remain_data < 1024) {
@@ -97,7 +109,7 @@ void sendFile (int connfd) {
 		}
 		fclose(fs);
 		printf("Send File Success!\n");
- }
+	}
 }
 
 void receiveFile (int sockfd, char file_name[256]) {
@@ -132,8 +144,8 @@ void receiveFile (int sockfd, char file_name[256]) {
 		}
 }
 
-=======
->>>>>>> a66337c99f8adf8abbb6cb855c4295da40bd8b9b
+//=======
+//>>>>>>> a66337c99f8adf8abbb6cb855c4295da40bd8b9b
 static void *chat (void *arg){
 	int sockfd, uid;
 
@@ -144,14 +156,15 @@ static void *chat (void *arg){
 
 		int i, j;
 		//send list topic
-		for (i = 0; i < MAXTOPIC; i++){
-			char userTopic[500] = {0};
-				for (j = 0; j < topic[i].curUser; j++){
-					strcat (userTopic, topic[i].user[j].username);
-					strcat (userTopic, " ");
-				}
-				write (sockfd, userTopic, sizeof (userTopic));
-		}
+		// for (i = 0; i < MAXTOPIC; i++){
+		// 	char userTopic[500] = {0};
+		// 		for (j = 0; j < topic[i].curUser; j++){
+		// 			strcat (userTopic, topic[i].user[j].username);
+		// 			strcat (userTopic, " ");
+		// 		}
+		// 		write (sockfd, userTopic, sizeof (userTopic));
+		// }
+		sendLtopic(sockfd);
 		fprintf (stdout, "\n");
 
 		//recv topic from client
@@ -166,7 +179,17 @@ static void *chat (void *arg){
 	pthread_mutex_unlock (&curUser_mutex);
 
 	//recv username client
-	read (sockfd, topic[uTopic].user[uid].username, sizeof (topic[uTopic].user[uid].username));
+	int tmp = 0;
+	while(1){
+		read (sockfd, topic[uTopic].user[uid].username, sizeof (topic[uTopic].user[uid].username));
+		for (i = 0; i < MAXTOPIC; i++)
+	 		for (j = 0; j < topic[i].curUser - 1 ; j++)
+	 			if (strcmp(topic[i].user[j].username, topic[uTopic].user[uid].username) == 0){
+	 				tmp = 1;
+	 				write (sockfd, &tmp, sizeof(int));
+	 				break;
+	 			}
+	}
 	topic[uTopic].user[uid].sockfd = sockfd;
 
 
@@ -198,7 +221,7 @@ static void *chat (void *arg){
 	 	}else{
 			// Nhan FIle tu Client
 			if(str[0] == '$') {
-				printf("Downlod file nhe %s\n", recvmsg);
+				printf("Downlod file %s\n", recvmsg);
 				receiveFile(sockfd, recvmsg);
 			}
 //	 		pthread_mutex_lock(&curUser_mutex);
@@ -227,98 +250,6 @@ static void *chat (void *arg){
     return (NULL);
 
 }
-
-
-
-// static void *chat (void *arg){
-// 	int sockfd, uid;
-//
-// 	sockfd = *((int *) arg);
-// 	pthread_detach (pthread_self ());
-//
-// 	pthread_mutex_lock (&curUser_mutex);
-// 		//uid = curUser;
-// 		//curUser ++;
-// 		//printf ("\n%d user online", curUser);
-//
-// 		int i, j;
-// 		//send list topic
-// 		//write (sockfd, &uid, sizeof (int)); //send current user online
-// 		for (i = 0; i < MAXTOPIC; i++){
-// 			char userTopic[500] = {0};
-// 			//write (sockfd, &topic[i].n_user, sizeof(int));
-// 			for (j = 0; j < topic[i].n_user; j++){
-// 				strcat (userTopic, topic[i].user.username);
-// 				strcat (userTopic, " ");
-// 			}
-// 			write (sockfd, userTopic, sizeof (userTopic));
-// 		}
-//
-// 		//recv topic from client
-// 		int uTopic;
-// 		read (sockfd, &uTopic, sizeof (int));
-// 		uid = topic[uTopic].curUser;
-// 		topic[tmp].curUser ++;
-// 	pthread_mutex_unlock (&curUser_mutex);
-//
-// 	//recv username client
-// 	read (sockfd, topic.user[uid].username, sizeof (topic.user[uid].username));
-// 	topic.user[uid].sockfd = sockfd;
-//
-//  	printf ("\nName: %s, sockfd: %d", topic.user[uid].username, topic.user[uid].sockfd);
-//
-//  	//recvice message
-//  	while(1){
-// 	 	char recvmsg[1024] = {0}, msg[1024] = {0};
-// 	 	read (sockfd, recvmsg, sizeof(recvmsg));
-//
-// 	 	if (strcmp(recvmsg, "@") == 0)
-// 	 		break;
-// 	 	int *str = recvmsg;
-// 	 	if (strcmp (str[0], '!') == 0){
-// 	 		str ++;
-//
-// 	 	}
-// 	}
-//
-// 	//for(;;){
-//  //                printf("\n%s: ", user[uid].name);
-//  //                char mess[1000] = {0};
-//
-//  //                read(connfd, mess, 1000);
-//  //                if (strcmp(mess, "@") == 0)
-//  //                        break;
-//  //                printf (" %s", mess);
-//  //                char buff[1052] = {0};
-//  //                strcat (buff, user[uid].name);
-//  //                strcat (buff, ": ");
-//  //                strcat (buff, mess);
-//  //                strcat (buff, " ");
-//  //                for(i = 0; i < n_user; i++){
-//  //                        if (i == uid) continue;
-//  //                        write(user[i].sockfd, buff, strlen(buff)); //strlen thay cho sizeof
-//  //                }
-//  //        }
-//  	printf("\n%s  finish chat.\n", topic[uTopic].user[uid].name);
-//     pthread_mutex_lock(&curUser_mutex);
-//         for (i = uid; i < topic[uTopic].curUser - 1; i++){
-//             memset(topic[uTopic].user[i].name, '0', 50);
-//             strcpy(topic[uTopic].user[i].name, topic[uTopic].user[i + 1].name);
-//             user[i].sockfd = user[i + 1].sockfd;
-//         }
-//         //user[n_user - 1].userFlag = 0;
-//         topic[uTopic].curUser --;
-//     pthread_mutex_unlock(&curUser_mutex);
-//
-//         free(arg);
-// // //      pthread_detach(pthread_self());
-//
-//     close (sockfd);
-//     return (NULL);
-//
-// }
-
-
 
 int main (int argc, char **argv){
 	int listenfd;
