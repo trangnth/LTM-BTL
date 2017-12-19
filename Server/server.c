@@ -70,9 +70,9 @@ void sendLtopic(int sockfd){
 //>>>>>> b489953ec601f611b85473ed7fdf99d5c2fcdb1f
 
 void sendFile (int connfd, char file_name[256]) {
-	int file_size;
+	long int file_size;
 
-	int remain_data;
+	long int remain_data;
 	struct stat st;
 	char buffer[1024];
 	char *ptr;
@@ -81,14 +81,14 @@ void sendFile (int connfd, char file_name[256]) {
 		if(fs == NULL) {
 			printf("ERROR: File %s not found on server.\n", ptr);
 			file_size = -1;
-			write(connfd, &file_size, sizeof(int));
+			write(connfd, &file_size, sizeof(long int));
 		}
 		else {
 			stat(ptr, &st);
 			remain_data = st.st_size;
 			file_size = remain_data;
-			printf("File_size: %d\n", file_size);
-			write(connfd, &file_size, sizeof(int));
+			printf("File_size: %ld\n", file_size);
+			write(connfd, &file_size, sizeof(long int));
 			while(remain_data > 0) {
 				if(remain_data < 1024) {
 					fread(buffer, remain_data, 1, fs);
@@ -109,12 +109,12 @@ void sendFile (int connfd, char file_name[256]) {
 void receiveFile (int sockfd, char file_name[256]) {
 
 	char buffer[1024];
-	int file_size;
+	long int file_size;
 			file_name[strcspn(file_name, "\n")]=0;
 			char *ptr;
 			ptr = strtok(file_name, "$");
-			read(sockfd, &file_size, sizeof(int));
-			printf("file_size la %d\n", file_size);
+			read(sockfd, &file_size, sizeof(long int));
+			printf("file_size la %ld\n", file_size);
 
 		if(file_size == -1) {
 			printf("File not exists\n");
