@@ -253,6 +253,7 @@ static void *chat (void *arg){
 				for(i = 0; i <  MAXTOPIC;i++) {
 					for(j = 0;j <topic[i].curUser;j++) {
 						if(strcmp(topic[i].user[j].username, str) == 0) {
+							printf("username from server %s\n", topic[i].user[j].username);
 							if (i == uid) continue;
 							write (sockfd, empty, sizeof (empty));
 							sendFile(topic[i].user[j].sockfd, msg);

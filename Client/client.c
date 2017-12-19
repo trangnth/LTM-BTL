@@ -44,18 +44,18 @@ void sendFile (int connfd, char file_name[256]) {
 	int remain_data;
 	struct stat st;
 	char buffer[1024];
-  char *ptr;
-  ptr = strtok(file_name, "$");
+  // char *ptr;
+  // ptr = strtok(file_name, "$");
 
-	FILE *fs = fopen(ptr, "rb");
+	FILE *fs = fopen(file_name, "rb");
 	if(fs == NULL) {
-		printf("ERROR: File %s not found on local.\n", ptr);
+		printf("ERROR: File %s not found on local.\n", file_name);
 		file_size = -1;
 		write(connfd, &file_size, sizeof(int));
 		fclose(fs);
 	}
 	else {
-		stat(ptr, &st);
+		stat(file_name, &st);
 		remain_data = st.st_size;
 		file_size = remain_data;
 		printf("File_size: %d\n", file_size);
@@ -80,8 +80,8 @@ void receiveFile (int sockfd, char file_name[256]) {
 	char buffer[1024];
 	int file_size;
 	file_name[strcspn(file_name, "\n")]=0;
-	char *ptr;
-	ptr = strtok(file_name, "&");
+	// char *ptr;
+	// ptr = strtok(file_name, "&");
 	read(sockfd, &file_size, sizeof(int));
 	printf("file_size la %d\n", file_size);
 
@@ -89,7 +89,7 @@ void receiveFile (int sockfd, char file_name[256]) {
 		printf("File not exists\n");
 	}
 	else {
-		FILE *fr = fopen(ptr, "w");
+		FILE *fr = fopen(file_name, "w");
 		printf("Downloading...\n");
 
 		while(file_size > 0) {
@@ -168,11 +168,11 @@ static void *readmsg (void *arg){
 			} else if(buff[0] == '#') {
 				printf("sendfile private %s\n", buff);
 				char *str = buff;
-				str++;
-				strtok(str, ":");
 				char *str2;
+				printf("str la %s\n", str);
 				str2 = strstr(str, ":");
 				str2++;
+				printf("filename la %s\n", str2);
 				receiveFile(sockfd, str2);
 			} else {
 				printf ("%s\n", buff);
