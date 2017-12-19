@@ -75,21 +75,13 @@ void sendFile (int connfd, char file_name[256]) {
 	int remain_data;
 	struct stat st;
 	char buffer[1024];
-
-	//while(1) {
-		//int n = read(connfd, file_name, sizeof(file_name));
-		//file_name[n] = '\0';
-		//if(strcmp(file_name, "@") == 0) {
-		//	file_size = -1;
-		//	write(connfd, &file_size, sizeof(int));
-		//	break;
-		//}
+	char *ptr;
+		ptr = strtok(file_name, "$");
 		FILE *fs = fopen(file_name, "rb");
 		if(fs == NULL) {
 			printf("ERROR: File %s not found on server.\n", file_name);
 			file_size = -1;
 			write(connfd, &file_size, sizeof(int));
-			return;
 		}
 		else {
 			stat(ptr, &st);

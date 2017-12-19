@@ -49,7 +49,10 @@ void sendFile (int connfd, char file_name[256]) {
 
 		FILE *fs = fopen(ptr, "rb");
 		if(fs == NULL) {
-			printf("ERROR: File %s not found on server.\n", ptr);
+			printf("ERROR: File %s not found on local.\n", ptr);
+			file_size = -1;
+			write(connfd, &file_size, sizeof(int));
+			fclose(fs);
 		}
 		else {
 			stat(ptr, &st);
@@ -68,9 +71,9 @@ void sendFile (int connfd, char file_name[256]) {
 				}
 				remain_data-=1024;
 			}
+			fclose(fs);
+			printf("Send File Success!\n");
 		}
-		fclose(fs);
-		printf("Send File Success!\n");
 }
 
 void receiveFile (int sockfd, char file_name[256]) {
