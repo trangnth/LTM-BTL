@@ -166,12 +166,14 @@ static void *readmsg (void *arg){
 				msgFile = strtok(buff, "&");
 				receiveFile(sockfd, msgFile);
 			} else if(buff[0] == '#') {
+				printf("sendfile private %s\n", buff);
 				char *str = buff;
 				str++;
 				strtok(str, ":");
-				str = strstr(str, ":");
-				str++;
-				receiveFile(sockfd, str);
+				char *str2;
+				str2 = strstr(str, ":");
+				str2++;
+				receiveFile(sockfd, str2);
 			} else {
 				printf ("%s\n", buff);
         //buff = {0};

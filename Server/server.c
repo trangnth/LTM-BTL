@@ -245,6 +245,7 @@ static void *chat (void *arg){
 				strcpy(empty, str);
 				str++;
 				strtok(str, ":");
+				printf("username la %s\n", str);
 				msg = strstr(recvmsg, ":");
 				msg++;
 				printf("msg la %s\n", msg);
@@ -252,6 +253,7 @@ static void *chat (void *arg){
 				for(i = 0; i <  MAXTOPIC;i++) {
 					for(j = 0;j <topic[i].curUser;j++) {
 						if(strcmp(topic[i].user[j].username, str) == 0) {
+							if (i == uid) continue;
 							write (sockfd, empty, sizeof (empty));
 							sendFile(topic[i].user[j].sockfd, msg);
 						}
