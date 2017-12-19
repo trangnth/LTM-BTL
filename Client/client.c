@@ -130,10 +130,7 @@ static void *writemsg (void *arg){
 				msgFile = strstr(msg, ":");
 				msgFile++;
       	sendFile(sockfd, msgFile);
-      }
-
-      //truyen file len server (group)
-    if(msg[0] == '$') {
+      } else if(msg[0] == '$') {
 				char *msgFile;
 				write (sockfd, msg, sizeof (msg));
 				msgFile = msg;
