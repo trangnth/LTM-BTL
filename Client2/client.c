@@ -45,35 +45,35 @@ void sendFile (int connfd, char file_name[256]) {
 	struct stat st;
 	char buffer[1024];
   char *ptr;
-  ptr = strtok(file_name, "$");
+    ptr = strtok(file_name, "$");
 
-	FILE *fs = fopen(ptr, "rb");
-	if(fs == NULL) {
-		printf("ERROR: File %s not found on local.\n", ptr);
-		file_size = -1;
-		write(connfd, &file_size, sizeof(int));
-		fclose(fs);
-	}
-	else {
-		stat(ptr, &st);
-		remain_data = st.st_size;
-		file_size = remain_data;
-		printf("File_size: %d\n", file_size);
-		write(connfd, &file_size, sizeof(int));
-		while(remain_data > 0) {
-			if(remain_data < 1024) {
-				fread(buffer, remain_data, 1, fs);
-				write(connfd, buffer, remain_data);
-			}
-			else {
-				fread(buffer, 1024, 1, fs);
-				write(connfd, buffer, 1024);
-			}
-			remain_data-=1024;
+		FILE *fs = fopen(ptr, "rb");
+		if(fs == NULL) {
+			printf("ERROR: File %s not found on local.\n", ptr);
+			file_size = -1;
+			write(connfd, &file_size, sizeof(int));
+			fclose(fs);
 		}
-		fclose(fs);
-		printf("Send File Success!\n");
-	}
+		else {
+			stat(ptr, &st);
+			remain_data = st.st_size;
+			file_size = remain_data;
+			printf("File_size: %d\n", file_size);
+			write(connfd, &file_size, sizeof(int));
+			while(remain_data > 0) {
+				if(remain_data < 1024) {
+					fread(buffer, remain_data, 1, fs);
+					write(connfd, buffer, remain_data);
+				}
+				else {
+					fread(buffer, 1024, 1, fs);
+					write(connfd, buffer, 1024);
+				}
+				remain_data-=1024;
+			}
+			fclose(fs);
+			printf("Send File Success!\n");
+		}
 }
 
 void receiveFile (int sockfd, char file_name[256]) {
@@ -85,74 +85,65 @@ void receiveFile (int sockfd, char file_name[256]) {
 	read(sockfd, &file_size, sizeof(int));
 	printf("file_size la %d\n", file_size);
 
-	if(file_size == -1) {
-		printf("File not exists\n");
-	}
-	else {
-		FILE *fr = fopen(ptr, "w");
-		printf("Downloading...\n");
-
-		while(file_size > 0) {
-
-			if(file_size < 1024) {
-				read(sockfd, buffer, file_size);
-				fwrite(buffer, file_size, 1,fr);
-			}
-			else {
-				read(sockfd, buffer, 1024);
-				fwrite(buffer, 1024, 1, fr);
-			}
-			file_size-=1024;
+		if(file_size == -1) {
+			printf("File not exists\n");
 		}
-		fclose(fr);
+		else {
+			FILE *fr = fopen(ptr, "w");
+			printf("Downloading...\n");
 
-		printf("Download Success\n");
-	}
+			while(file_size > 0) {
+
+				if(file_size < 1024) {
+					read(sockfd, buffer, file_size);
+					fwrite(buffer, file_size, 1,fr);
+				}
+				else {
+					read(sockfd, buffer, 1024);
+					fwrite(buffer, 1024, 1, fr);
+				}
+				file_size-=1024;
+			}
+			fclose(fr);
+
+			printf("Download Success\n");
+		}
 }
 
 
 //thread write
 static void *writemsg (void *arg){
-  int sockfd = *((int *)arg);
-  while(1){
-      char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
-      fflush (stdin);
-      fgets (msg, 1024, stdin);
-      msg[strcspn(msg,"\n")] = 0;
-      if (strcmp (msg, "@") == 0){ //Finish chat
+    int sockfd = *((int *)arg);
+    while(1){
+        char msg[1024] = {0}, sendmsg[1024] = {0}, recvmsg[1024] = {0};
+        fflush (stdin);
+        fgets (msg, 1024, stdin);
+        msg[strcspn(msg,"\n")] = 0;
+        if (strcmp (msg, "@") == 0){ //Finish chat
+            write (sockfd, msg, sizeof (msg));
+            break;
+        }
+        //truyen file cho user
+        if(msg[0] == '#'){
+        	write (sockfd, msg, sizeof (msg));
+        	sendFile(sockfd, msg);
+        }
+
+        //truyen file len server (group)
+        if(msg[0] == '$') {
           write (sockfd, msg, sizeof (msg));
-          break;
-      }
-      //truyen file cho user
-      if(msg[0] == '#'){
-				char *msgFile;
-      	write (sockfd, msg, sizeof (msg));
-				msgFile = strstr(msg, ":");
-				msgFile++;
-				printf("msg la %s\n", msgFile);
-      	sendFile(sockfd, msgFile);
-      }
-
-      //truyen file len server (group)
-    if(msg[0] == '$') {
-				char *msgFile;
-				write (sockfd, msg, sizeof (msg));
-				msgFile = msg;
-				msgFile++;
-	      sendFile(sockfd, msgFile);
-    } else if(msg[0] == '&') {
-      	write (sockfd, msg, sizeof (msg));
-		} else if (msg[0] !=  '!'){ //chat group
-	      strcat (sendmsg, "G>");
-	      strcat (sendmsg, username);
-	      strcat (sendmsg, ": ");
-	      strcat (sendmsg, msg);
-	    	write (sockfd, sendmsg, sizeof (msg));
-		} else {
-				write (sockfd, msg, sizeof (msg)); //chat user
-		}
-
-  }
+          sendFile(sockfd, msg);
+        } else if(msg[0] == '&') {
+          write (sockfd, msg, sizeof (msg));
+				} else if (msg[0] !=  '!'){ //chat group
+            strcat (sendmsg, "G>");
+            strcat (sendmsg, username);
+            strcat (sendmsg, ": ");
+            strcat (sendmsg, msg);
+		    write (sockfd, sendmsg, sizeof (msg));
+        }else
+        	write (sockfd, msg, sizeof (msg)); //chat user
+    }
 }
 
 //thread read
@@ -162,20 +153,13 @@ static void *readmsg (void *arg){
 	printf ("\n");
     while (read (sockfd, buff, sizeof(buff))> 0){
 			if(buff[0] == '&') { //Nhan file tu server
-				char *msgFile = buff;
-				msgFile = strtok(buff, "&");
-				receiveFile(sockfd, msgFile);
-			} else if(buff[0] == '#') {
-				char *str = buff;
-				str++;
-				strtok(str, ":");
-				str = strstr(str, ":");
-				str++;
-				receiveFile(sockfd, str);
+				receiveFile(sockfd, buff);
 			} else {
 				printf ("%s\n", buff);
         //buff = {0};
 			}
+
+
     }
 }
 
@@ -183,11 +167,11 @@ static void *readmsg (void *arg){
 int main(int argc, char **argv){
 	int *sockfd, i, j, uid, topic;
 	struct sockaddr_in servaddr;
-  pthread_t w_tid, r_tid;
+    pthread_t w_tid, r_tid;
 	sockfd = malloc (sizeof (int));
 
 	if ((*sockfd = socket (AF_INET, SOCK_STREAM, 0)) == -1){
-    fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
+        fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
 		exit (EXIT_FAILURE);
 	}
 	bzero (&servaddr, sizeof(servaddr));
@@ -197,21 +181,28 @@ int main(int argc, char **argv){
     inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
 
     if ((connect(*sockfd, (struct sockaddr *) &servaddr, sizeof (servaddr))) == 1){
-			fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
-			exit(EXIT_FAILURE);
+	fprintf(stderr, "Error creating socket --> %s\n", strerror(errno));
+	exit(EXIT_FAILURE);
     }
 
+    //recv list topic
+    // printf ("\nList user online: ");
+    // for (i = 0; i < MAXTOPIC; i++){
+    //     char userTopic[500] = {0};
+    //     read (*sockfd, userTopic, sizeof(userTopic));
+    //     printf ("\n%d. %s", i, userTopic);
+    // }
     recvLtopic (*sockfd);
 
     //send topic to server
     do{
-      printf("\nChoose group that you want to subcribe: ");
-      scanf ("%d", &topic);
-		}while (topic > 4 || topic < 0);
-    	write (*sockfd, &topic, sizeof(int));
+        printf("\nChoose group that you want to subcribe: ");
+        scanf ("%d", &topic);
+	}while (topic > 4 || topic < 0);
+    write (*sockfd, &topic, sizeof(int));
 
     //send username to server
-		int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
+	int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
 
     while(1){
 		int tmp;

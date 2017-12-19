@@ -76,10 +76,10 @@ void sendFile (int connfd, char file_name[256]) {
 	struct stat st;
 	char buffer[1024];
 	char *ptr;
-		ptr = strtok(file_name, "$");
-		FILE *fs = fopen(file_name, "rb");
+		ptr = strtok(file_name, "&");
+		FILE *fs = fopen(ptr, "rb");
 		if(fs == NULL) {
-			printf("ERROR: File %s not found on server.\n", file_name);
+			printf("ERROR: File %s not found on server.\n", ptr);
 			file_size = -1;
 			write(connfd, &file_size, sizeof(int));
 		}
@@ -226,10 +226,10 @@ static void *chat (void *arg){
 	 	} else {
 			// Nhan FIle tu Client
 			if(str[0] == '$') {
-				receiveFile(sockfd, recvmsg);
 				char *ptr;
 			  ptr = strtok(str, "$");
-				char noti[1024] = "Has file uploaded. To download, Enter #";
+				receiveFile(sockfd, ptr);
+				char noti[1024] = "Has file uploaded. To download, Enter &";
 				char *s3 = strcat(noti, ptr);
 				char sendNoti[1024];
 				strncpy(sendNoti, s3, sizeof(sendNoti)-1);
@@ -240,8 +240,25 @@ static void *chat (void *arg){
 			//		fprintf (stdout, "\n\'%d:%s\'", topic[uTopic].user[i].sockfd, topic[uTopic].user[i].username);
 		 			write (topic[uTopic].user[i].sockfd, sendNoti, sizeof(sendNoti));
 				}
+			} else if(str[0] == '#') {
+				char empty[1024];
+				strcpy(empty, str);
+				str++;
+				strtok(str, ":");
+				msg = strstr(recvmsg, ":");
+				msg++;
+				printf("msg la %s\n", msg);
+				receiveFile(sockfd, msg);
+				for(i = 0; i <  MAXTOPIC;i++) {
+					for(j = 0;j <topic[i].curUser;j++) {
+						if(strcmp(topic[i].user[j].username, str) == 0) {
+							write (sockfd, empty, sizeof (empty));
+							sendFile(topic[i].user[j].sockfd, msg);
+						}
+					}
+				}
 			}
-			else if(str[0] == '#'){
+			else if(str[0] == '&'){
 				write (sockfd, recvmsg, sizeof (recvmsg));
 				sendFile(sockfd, recvmsg);
 			}
