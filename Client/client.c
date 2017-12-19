@@ -129,7 +129,6 @@ static void *writemsg (void *arg){
       	write (sockfd, msg, sizeof (msg));
 				msgFile = strstr(msg, ":");
 				msgFile++;
-				printf("msg la %s\n", msgFile);
       	sendFile(sockfd, msgFile);
       }
 
@@ -166,13 +165,10 @@ static void *readmsg (void *arg){
 				msgFile = strtok(buff, "&");
 				receiveFile(sockfd, msgFile);
 			} else if(buff[0] == '#') {
-				printf("sendfile private %s\n", buff);
 				char *str = buff;
 				char *str2;
-				printf("str la %s\n", str);
 				str2 = strstr(str, ":");
 				str2++;
-				printf("filename la %s\n", str2);
 				receiveFile(sockfd, str2);
 			} else {
 				printf ("%s\n", buff);

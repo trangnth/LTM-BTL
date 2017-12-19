@@ -245,17 +245,14 @@ static void *chat (void *arg){
 				strcpy(empty, str);
 				str++;
 				strtok(str, ":");
-				printf("username la %s\n", str);
 				msg = strstr(recvmsg, ":");
 				msg++;
-				printf("msg la %s\n", msg);
 				receiveFile(sockfd, msg);
 				for(i = 0; i <  MAXTOPIC;i++) {
 					for(j = 0;j <topic[i].curUser;j++) {
 						if(strcmp(topic[i].user[j].username, str) == 0) {
-							printf("username from server %s\n", topic[i].user[j].username);
 							if (i == uid) continue;
-							write (sockfd, empty, sizeof (empty));
+							write (topic[i].user[j].sockfd, empty, sizeof (empty));
 							sendFile(topic[i].user[j].sockfd, msg);
 						}
 					}
