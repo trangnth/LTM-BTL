@@ -34,7 +34,6 @@ void sendFile (int connfd, char file_name[256]) {
 	struct stat st;
 	char buffer[1024];
   char *ptr;
-  printf("davao truyen file %s\n", file_name);
     ptr = strtok(file_name, "$");
 
 		FILE *fs = fopen(ptr, "rb");
@@ -63,28 +62,20 @@ void sendFile (int connfd, char file_name[256]) {
 		printf("Send File Success!\n");
 }
 
-void receiveFile (int sockfd) {
+void receiveFile (int sockfd, char file_name[256]) {
 	char buffer[1024];
-	char file_name[256];
 	int file_size;
-	while(1) {
-      int n = read(sockfd, file_name, sizeof(file_name));
-			printf("Nhap ten file (Enter \"@\" to quit): ");
-			fgets(file_name, 256, stdin);
-			file_name[strcspn(file_name, "\n")]=0;
-			write(sockfd, file_name, strlen(file_name));
-			if(strcmp(file_name, "@") == 0) {
-				break;
-			}
-			read(sockfd, &file_size, sizeof(int));
-			printf("file_size la %d\n", file_size);
+	file_name[strcspn(file_name, "\n")]=0;
+	char *ptr;
+	ptr = strtok(file_name, "#");
+	read(sockfd, &file_size, sizeof(int));
+	printf("file_size la %d\n", file_size);
 
 		if(file_size == -1) {
 			printf("File not exists\n");
-			break;
 		}
 		else {
-			FILE *fr = fopen(file_name, "w");
+			FILE *fr = fopen(ptr, "w");
 			printf("Downloading...\n");
 
 			while(file_size > 0) {
@@ -103,7 +94,6 @@ void receiveFile (int sockfd) {
 
 			printf("Download Success\n");
 		}
-	}
 }
 
 
@@ -121,10 +111,11 @@ static void *writemsg (void *arg){
         }
         //truyen file len server
         if(msg[0] == '$') {
-          printf("chuc nang truyen file\n");
           write (sockfd, msg, sizeof (msg));
           sendFile(sockfd, msg);
-        } else if (msg[0] !=  '!'){ //chat group
+        } else if(msg[0] == '#') {
+          write (sockfd, msg, sizeof (msg));
+				} else if (msg[0] !=  '!'){ //chat group
             strcat (sendmsg, "G>");
             strcat (sendmsg, username);
             strcat (sendmsg, ": ");
@@ -141,8 +132,14 @@ static void *readmsg (void *arg){
     char buff [1024] = {0};
 	printf ("\n");
     while (read (sockfd, buff, sizeof(buff))> 0){
-        printf ("%s\n", buff);
+			if(buff[0] == '#') { //Nhan file tu server
+				receiveFile(sockfd, buff);
+			} else {
+				printf ("%s\n", buff);
         //buff = {0};
+			}
+
+
     }
 }
 
@@ -185,7 +182,7 @@ int main(int argc, char **argv){
 
     //send username to server
     printf ("Enter your name: ");
-	int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
+		int ch; while((ch=getchar())!='\n'&&ch!=EOF); //Lam sach bo dem sau scanf
     fgets (username, sizeof(username), stdin);
     username[strcspn (username, "\n")] = 0;
     write (*sockfd, username, sizeof (username));
