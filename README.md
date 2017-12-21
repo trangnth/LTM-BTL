@@ -14,4 +14,14 @@ Xây dựng chương trình chat sử dụng giao thức kiểu publish/subscrib
 * Hệ điều hành: Linux
 * Programming language: C, C++ 
 
+## Hướng dẫn chạy chương trình
+* Phía Server:
+
+      make
+      ./server 
+      
+* Phía Client:
+
+      make
+      ./client IP_SERVER
 
