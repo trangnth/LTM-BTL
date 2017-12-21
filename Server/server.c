@@ -36,14 +36,12 @@
 #define MAXTOPIC 5
 #define PORT 4000
 
-struct User
-{
+struct User{
 	char username[50];
 	int sockfd;
 };
 
-struct Topic
-{
+struct Topic{
 	struct User user[MAXUSER];
 	int curUser;
 };
@@ -51,8 +49,6 @@ struct Topic
 struct Topic topic[MAXTOPIC];
 
 pthread_mutex_t curUser_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-//<<<<<<< HEAD
 
 //send list topic
 void sendLtopic(int sockfd){
@@ -66,8 +62,6 @@ void sendLtopic(int sockfd){
 		write (sockfd, userTopic, sizeof (userTopic));
 	}
 }
-//=======
-//>>>>>> b489953ec601f611b85473ed7fdf99d5c2fcdb1f
 
 void sendFile (int connfd, char file_name[256]) {
 	long int file_size;
@@ -107,7 +101,6 @@ void sendFile (int connfd, char file_name[256]) {
 
 
 void receiveFile (int sockfd, char file_name[256]) {
-
 	char buffer[1024];
 	long int file_size;
 			file_name[strcspn(file_name, "\n")]=0;
@@ -116,10 +109,9 @@ void receiveFile (int sockfd, char file_name[256]) {
 			read(sockfd, &file_size, sizeof(long int));
 			printf("file_size la %ld\n", file_size);
 
-		if(file_size == -1) {
+		if (file_size == -1) {
 			printf("File not exists\n");
-		}
-		else {
+		} else {
 			FILE *fr = fopen(ptr, "w");
 			printf("Downloading...\n");
 
@@ -145,20 +137,16 @@ char *stringCat(char *ptr1, char textNoti[1024]) {
 	char *ptr2, *ptr3;
 	ptr2 = &textNoti[0];
 	int n = strlen(ptr1);
-  int m = strlen(textNoti);
+	int m = strlen(textNoti);
 	int i;
-	for (i = 0; i < n; i++)
-      {
-          *(ptr3 + i)  = *(ptr1 + i);
+	for (i = 0; i < n; i++){
+	  *(ptr3 + i)  = *(ptr1 + i);
+	}
 
-      }
-
-      for (i = 0; i < m; i++)
-      {
-          *(ptr3 + i + n)  = *(ptr2 + i);
-
-      }
-			return ptr3;
+	for (i = 0; i < m; i++){
+	  *(ptr3 + i + n)  = *(ptr2 + i);
+	}
+	return ptr3;
 }
 
 static void *chat (void *arg){
@@ -224,10 +212,10 @@ static void *chat (void *arg){
 	 					write (topic[i].user[j].sockfd, sendmsg, sizeof(sendmsg));
 
 	 	} else {
-			// Nhan FIle tu Client
+			// Nhan File tu Client
 			if(str[0] == '$') {
 				char *ptr;
-			  ptr = strtok(str, "$");
+			  	ptr = strtok(str, "$");
 				receiveFile(sockfd, ptr);
 				char noti[1024] = "Has file uploaded. To download, Enter &";
 				char *s3 = strcat(noti, ptr);
@@ -237,7 +225,6 @@ static void *chat (void *arg){
 				sendNoti[sizeof(sendNoti)-1] = '\0';
 				for (i = 0; i < topic[uTopic].curUser; i++){
 		 			if (i == uid) continue;
-			//		fprintf (stdout, "\n\'%d:%s\'", topic[uTopic].user[i].sockfd, topic[uTopic].user[i].username);
 		 			write (topic[uTopic].user[i].sockfd, sendNoti, sizeof(sendNoti));
 				}
 			} else if(str[0] == '#') {
@@ -263,13 +250,10 @@ static void *chat (void *arg){
 				sendFile(sockfd, recvmsg);
 			}
 			 else {
-				//	 		pthread_mutex_lock(&curUser_mutex);
 					 		for (i = 0; i < topic[uTopic].curUser; i++){
 					 			if (i == uid) continue;
-						//		fprintf (stdout, "\n\'%d:%s\'", topic[uTopic].user[i].sockfd, topic[uTopic].user[i].username);
 					 			write (topic[uTopic].user[i].sockfd, recvmsg, sizeof(recvmsg));
 							}
-				//	 		pthread_mutex_unlock(&curUser_mutex);
 			}
 	 	}
 	}
@@ -285,10 +269,8 @@ static void *chat (void *arg){
     pthread_mutex_unlock(&curUser_mutex);
 
     free(arg);
-
     close (sockfd);
     return (NULL);
-
 }
 
 int main (int argc, char **argv){
@@ -296,7 +278,6 @@ int main (int argc, char **argv){
 	socklen_t clilen;
 	int *iptr, i;
 	pthread_t tid;
-//	pid_t childpid;
 	struct sockaddr_in cliaddr, servaddr;
 
 	for (i = 0; i < MAXTOPIC; i++)
@@ -316,7 +297,7 @@ int main (int argc, char **argv){
 		iptr = malloc (sizeof(int));
 		*iptr = accept (listenfd, (struct sockaddr *) &cliaddr, &clilen);
 
-	fprintf (stdout, "\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
+		fprintf (stdout, "\nOne client %s:%d connected.", inet_ntoa (cliaddr.sin_addr), cliaddr.sin_port);
 		pthread_create (&tid, NULL, &chat, (void*) iptr);
 	}
 
